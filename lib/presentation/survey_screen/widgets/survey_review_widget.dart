@@ -59,6 +59,10 @@ class SurveyReviewWidget extends StatelessWidget {
   /// Rendered at the position of the section with section_code == 'A' or 'SEC-A'.
   final Widget? respondentDetailsWidget;
 
+  /// The Section B structured widget (HouseholdProfileSectionWidget in read-only mode).
+  /// Rendered at the position of the section with section_code == 'B' or 'SEC-B'.
+  final Widget? householdProfileWidget;
+
   const SurveyReviewWidget({
     super.key,
     required this.questions,
@@ -77,6 +81,7 @@ class SurveyReviewWidget extends StatelessWidget {
     this.householdPriorityNeedsWidget,
     this.enumeratorObservationWidget,
     this.respondentDetailsWidget,
+    this.householdProfileWidget,
   });
 
   @override
@@ -116,6 +121,14 @@ class SurveyReviewWidget extends StatelessWidget {
            (q.questionCode != null && q.questionCode!.startsWith('A-')))) {
         continue;
       }
+      if (householdProfileWidget != null &&
+          (q.sectionTitle.toLowerCase().contains('household profile') ||
+           q.sectionTitle.startsWith('B:') ||
+           q.sectionTitle.startsWith('B -') ||
+           (q.questionCode != null && q.questionCode!.startsWith('B-')) ||
+           q.id.startsWith('B1_'))) {
+        continue;
+      }
       sections.putIfAbsent(q.sectionTitle, () => []).add(q);
     }
 
@@ -126,6 +139,14 @@ class SurveyReviewWidget extends StatelessWidget {
            q.sectionTitle.startsWith('A:') ||
            q.sectionTitle.startsWith('A -') ||
            (q.questionCode != null && q.questionCode!.startsWith('A-')))) {
+        return false;
+      }
+      if (householdProfileWidget != null &&
+          (q.sectionTitle.toLowerCase().contains('household profile') ||
+           q.sectionTitle.startsWith('B:') ||
+           q.sectionTitle.startsWith('B -') ||
+           (q.questionCode != null && q.questionCode!.startsWith('B-')) ||
+           q.id.startsWith('B1_'))) {
         return false;
       }
       final ans = answers[q.id];
@@ -168,6 +189,19 @@ class SurveyReviewWidget extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: respondentDetailsWidget!,
+            ),
+          );
+          continue;
+        }
+
+        // Section B: render the combined household profile widget
+        if ((code == 'B' || code == 'SEC-B' || code.startsWith('B-') || code == 'B1' || code == 'SEC-B1') &&
+            householdProfileWidget != null) {
+          handledTitles.add(title);
+          sectionSlivers.add(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: householdProfileWidget!,
             ),
           );
           continue;

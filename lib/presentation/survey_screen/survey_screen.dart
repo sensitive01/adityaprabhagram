@@ -10,6 +10,7 @@ import '../../services/local_database_service.dart';
 import '../../services/connectivity_service.dart';
 import '../../theme/app_theme.dart';
 import './widgets/respondent_details_section_widget.dart';
+import './widgets/household_profile_section_widget.dart';
 import './widgets/pest_disease_section_widget.dart';
 import './widgets/employment_seasonality_section_widget.dart';
 import './widgets/asset_matrix_section_widget.dart';
@@ -408,6 +409,10 @@ class _SurveyScreenState extends State<SurveyScreen> {
   /// GlobalKey for Section A (Respondent Details) widget so we can call saveData() / validateAndSave().
   final GlobalKey<RespondentDetailsSectionWidgetState> _respondentDetailsKey =
       GlobalKey<RespondentDetailsSectionWidgetState>();
+
+  /// GlobalKey for Section B (Household Profile) widget so we can call saveData() / validateAndSave().
+  final GlobalKey<HouseholdProfileSectionWidgetState> _householdProfileKey =
+      GlobalKey<HouseholdProfileSectionWidgetState>();
 
   /// Tracks the survey UUID for the current session.
   /// Initialised from widget.surveyId; updated after a new draft is created.
@@ -811,6 +816,62 @@ class _SurveyScreenState extends State<SurveyScreen> {
     final aId = _aSectionId;
     if (aId == null) return false;
     return _currentSectionId == aId;
+  }
+
+  // ── Section B (Household Profile) helpers ─────────────────────────────────
+
+  /// Returns true when Section B exists in active sections.
+  bool get _hasBSection => _orderedSections.any((s) {
+    final c = (s['code'] as String? ?? '').toUpperCase();
+    return c == 'B' || c == 'SEC-B' || c.startsWith('B-') || c == 'B1' || c == 'SEC-B1';
+  });
+
+  /// The section_id of Section B, or null if not found.
+  String? get _bSectionId {
+    for (final s in _orderedSections) {
+      final c = (s['code'] as String? ?? '').toUpperCase();
+      if (c == 'B' || c == 'SEC-B' || c.startsWith('B-') || c == 'B1' || c == 'SEC-B1') {
+        return s['id'] as String?;
+      }
+    }
+    return null;
+  }
+
+  /// The display_order of Section B, or -1 if not found.
+  int get _bSectionDisplayOrder {
+    for (final s in _orderedSections) {
+      final c = (s['code'] as String? ?? '').toUpperCase();
+      if (c == 'B' || c == 'SEC-B' || c.startsWith('B-') || c == 'B1' || c == 'SEC-B1') {
+        return (s['displayOrder'] as int? ?? -1);
+      }
+    }
+    return -1;
+  }
+
+  /// Section immediately after Section B (by display_order).
+  String? get _sectionAfterB {
+    final bOrder = _bSectionDisplayOrder;
+    if (bOrder < 0) return null;
+    Map<String, dynamic>? best;
+    for (final s in _orderedSections) {
+      final order = s['displayOrder'] as int? ?? 0;
+      if (order > bOrder) {
+        if (best == null || order < (best['displayOrder'] as int? ?? 999)) {
+          best = s;
+        }
+      }
+    }
+    return best?['id'] as String?;
+  }
+
+  /// True when the questionnaire is showing Section B (Household Profile)
+  /// as a consolidated single page.
+  bool get _isBSectionMode {
+    if (_isReviewMode) return false;
+    if (_questions.isEmpty) return false;
+    final bId = _bSectionId;
+    if (bId == null) return false;
+    return _currentSectionId == bId;
   }
 
   // ── Section O (Government Schemes) helpers ────────────────────────────────
@@ -1509,6 +1570,13 @@ class _SurveyScreenState extends State<SurveyScreen> {
           }, orElse: () => {'title': 'A: Respondent Details'})['title']
           as String);
     }
+    if (_isBSectionMode) {
+      return (_orderedSections.firstWhere((s) {
+            final c = (s['code'] as String? ?? '').toUpperCase();
+            return c == 'B' || c == 'SEC-B' || c.startsWith('B-') || c == 'B1' || c == 'SEC-B1';
+          }, orElse: () => {'title': 'B: Household Profile'})['title']
+          as String);
+    }
     if (_isAssetMatrixMode) {
       return (_orderedSections.firstWhere((s) {
             final c = s['code'] as String;
@@ -1631,6 +1699,13 @@ class _SurveyScreenState extends State<SurveyScreen> {
       }
       return 1;
     }
+    if (_isBSectionMode) {
+      for (int i = 0; i < _orderedSections.length; i++) {
+        final c = (_orderedSections[i]['code'] as String? ?? '').toUpperCase();
+        if (c == 'B' || c == 'SEC-B' || c.startsWith('B-') || c == 'B1' || c == 'SEC-B1') return i + 1;
+      }
+      return 2;
+    }
     if (_isPestSectionMode) {
       for (int i = 0; i < _orderedSections.length; i++) {
         final c2 = _orderedSections[i]['code'] as String;
@@ -1691,6 +1766,9 @@ class _SurveyScreenState extends State<SurveyScreen> {
   bool get _canGoNext {
     if (_isASectionMode) {
       return true; // Section A validation is executed when clicking Next via FormKey
+    }
+    if (_isBSectionMode) {
+      return true; // Section B validation is executed when clicking Next via FormKey
     }
     if (_isKSectionMode) {
       return true; // K section: all fields optional to proceed
@@ -2630,6 +2708,48 @@ class _SurveyScreenState extends State<SurveyScreen> {
       }
       // Fallback: first question whose sectionId != _aSectionId
       final nextIdx = _questions.indexWhere((q) => q.sectionId != _aSectionId);
+      if (nextIdx >= 0) {
+        setState(() {
+          _currentQuestionIndex = nextIdx;
+        });
+        return;
+      }
+      setState(() {
+        _isReviewMode = true;
+      });
+      return;
+    }
+
+    // ── Section B (Household Profile) mode: save data and advance to section after B ──
+    if (_isBSectionMode) {
+      final isValid =
+          _householdProfileKey.currentState?.validateAndSave() ?? true;
+      if (!isValid) {
+        Fluttertoast.showToast(
+          msg: 'Please fill in all required fields in Section B',
+        );
+        return;
+      }
+      _householdProfileKey.currentState?.saveData();
+      final afterBId = _sectionAfterB;
+      if (afterBId != null) {
+        final firstIdx = _questions.indexWhere((q) => q.sectionId == afterBId);
+        if (firstIdx >= 0) {
+          setState(() {
+            _currentQuestionIndex = firstIdx;
+          });
+          return;
+        }
+      }
+      // If Section C (Asset Matrix) exists
+      if (_hasAssetMatrixSection) {
+        setState(() {
+          _isAssetMatrixMode = true;
+        });
+        return;
+      }
+      final nextIdx = _questions.indexWhere(
+          (q) => q.sectionId != _bSectionId && q.sectionId != _aSectionId);
       if (nextIdx >= 0) {
         setState(() {
           _currentQuestionIndex = nextIdx;
@@ -3691,6 +3811,17 @@ class _SurveyScreenState extends State<SurveyScreen> {
         }
       }
       // Fallback: go to section before C
+      if (_hasBSection) {
+        final bId = _bSectionId;
+        final firstBIdx = _questions.indexWhere((q) => q.sectionId == bId);
+        if (firstBIdx >= 0) {
+          setState(() {
+            _isAssetMatrixMode = false;
+            _currentQuestionIndex = firstBIdx;
+          });
+          return;
+        }
+      }
       final beforeCId = _sectionBeforeAssetMatrix;
       if (beforeCId != null) {
         int lastIdx = -1;
@@ -3711,6 +3842,25 @@ class _SurveyScreenState extends State<SurveyScreen> {
       }
       setState(() {
         _isAssetMatrixMode = false;
+        _currentQuestionIndex = 0;
+      });
+      return;
+    }
+
+    // ── In Section B (Household Profile) mode: go back to Section A ──────────
+    if (_isBSectionMode) {
+      _householdProfileKey.currentState?.saveData();
+      final aId = _aSectionId;
+      if (aId != null) {
+        final firstAIdx = _questions.indexWhere((q) => q.sectionId == aId);
+        if (firstAIdx >= 0) {
+          setState(() {
+            _currentQuestionIndex = firstAIdx;
+          });
+          return;
+        }
+      }
+      setState(() {
         _currentQuestionIndex = 0;
       });
       return;
@@ -5234,6 +5384,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                     : _currentQuestionIndex,
                 totalInSection:
                     (_isASectionMode ||
+                        _isBSectionMode ||
                         _isPestSectionMode ||
                         _isFSectionMode ||
                         _isKSectionMode ||
@@ -5262,6 +5413,14 @@ class _SurveyScreenState extends State<SurveyScreen> {
                               initialHouseholdName: widget.householdName,
                               initialAnswers: _answers,
                               currentAgentName: SupabaseService.instance.currentUser?.userMetadata?['full_name'] as String? ?? 'Field Agent',
+                              isReadOnly: true,
+                              onSave: (_) {},
+                            )
+                          : null,
+                      householdProfileWidget: _hasBSection
+                          ? HouseholdProfileSectionWidget(
+                              householdId: widget.householdId,
+                              initialAnswers: _answers,
                               isReadOnly: true,
                               onSave: (_) {},
                             )
@@ -5701,6 +5860,24 @@ class _SurveyScreenState extends State<SurveyScreen> {
                         },
                       ),
                     )
+                  : _isBSectionMode
+                  ? SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isTablet ? 40 : 16,
+                        vertical: 16,
+                      ),
+                      child: HouseholdProfileSectionWidget(
+                        key: _householdProfileKey,
+                        householdId: widget.householdId,
+                        initialAnswers: _answers,
+                        isReadOnly: _isReadOnly,
+                        onSave: (map) {
+                          setState(() {
+                            _answers.addAll(map);
+                          });
+                        },
+                      ),
+                    )
                   : SingleChildScrollView(
                       padding: EdgeInsets.symmetric(
                         horizontal: isTablet ? 40 : 16,
@@ -5733,6 +5910,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                 canGoNext:
                     _canGoNext ||
                     _isASectionMode ||
+                    _isBSectionMode ||
                     _isReviewMode ||
                     _isPestSectionMode ||
                     _isFSectionMode ||
@@ -5752,6 +5930,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                 onPrev:
                     _logicalDisplayIndex > 1 ||
                         _isReviewMode ||
+                        _isBSectionMode ||
                         _isPestSectionMode ||
                         _isFSectionMode ||
                         _isKSectionMode ||
