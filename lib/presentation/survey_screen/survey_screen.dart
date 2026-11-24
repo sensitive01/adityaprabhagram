@@ -4941,6 +4941,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
       // ── Mirror to local DB (dual-write) ───────────────────────────────────
       if (_currentSurveyId != null && _currentSurveyId!.isNotEmpty) {
         _mirrorDraftToLocalDb(uid: uid, status: 'draft');
+        _respondentDetailsKey.currentState?.saveData();
         _lSectionKey.currentState?.saveData();
         _assetMatrixKey.currentState?.saveData();
         _livestockSectionKey.currentState?.saveData();
@@ -4962,6 +4963,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
             _currentSurveyId = const Uuid().v4();
           }
           await _mirrorDraftToLocalDb(uid: uid, status: 'draft');
+          _respondentDetailsKey.currentState?.saveData();
           _lSectionKey.currentState?.saveData();
           _assetMatrixKey.currentState?.saveData();
           _livestockSectionKey.currentState?.saveData();
@@ -5012,6 +5014,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
       }
 
       await _mirrorDraftToLocalDb(uid: uid, status: status);
+      _respondentDetailsKey.currentState?.saveData();
       await _assetMatrixKey.currentState?.saveData();
       if (mounted) setState(() => _isSavingDraft = false);
       Fluttertoast.showToast(
@@ -5318,7 +5321,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
                     ? _logicalDisplayIndex - 1
                     : _currentQuestionIndex,
                 totalInSection:
-                    (_isPestSectionMode ||
+                    (_isASectionMode ||
+                        _isPestSectionMode ||
                         _isFSectionMode ||
                         _isKSectionMode ||
                         _isLSectionMode ||
@@ -5340,6 +5344,16 @@ class _SurveyScreenState extends State<SurveyScreen> {
                       onEditQuestion: _isReadOnly ? null : _goToQuestion,
                       isReadOnly: _isReadOnly,
                       orderedSections: _orderedSections,
+                      respondentDetailsWidget: _hasASection
+                          ? RespondentDetailsSectionWidget(
+                              householdId: widget.householdId,
+                              initialHouseholdName: widget.householdName,
+                              initialAnswers: _answers,
+                              currentAgentName: SupabaseService.instance.currentUser?.userMetadata?['full_name'] as String? ?? 'Field Agent',
+                              isReadOnly: true,
+                              onSave: (_) {},
+                            )
+                          : null,
                       pestWidget: _currentSurveyId != null
                           ? PestDiseaseSectionWidget(
                               householdId: widget.householdId,
@@ -5752,6 +5766,29 @@ class _SurveyScreenState extends State<SurveyScreen> {
                               ),
                             ),
                     )
+                  : _isASectionMode
+                  ? SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isTablet ? 40 : 16,
+                        vertical: 16,
+                      ),
+                      child: RespondentDetailsSectionWidget(
+                        key: _respondentDetailsKey,
+                        householdId: widget.householdId,
+                        initialHouseholdName: widget.householdName,
+                        initialAnswers: _answers,
+                        currentAgentName: SupabaseService
+                                .instance.currentUser?.userMetadata?['full_name']
+                                as String? ??
+                            'Field Agent',
+                        isReadOnly: _isReadOnly,
+                        onSave: (map) {
+                          setState(() {
+                            _answers.addAll(map);
+                          });
+                        },
+                      ),
+                    )
                   : SingleChildScrollView(
                       padding: EdgeInsets.symmetric(
                         horizontal: isTablet ? 40 : 16,
@@ -5783,6 +5820,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                 isSubmitting: _isSubmitting,
                 canGoNext:
                     _canGoNext ||
+                    _isASectionMode ||
                     _isReviewMode ||
                     _isPestSectionMode ||
                     _isFSectionMode ||
