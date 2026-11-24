@@ -420,9 +420,6 @@ class _SurveyScreenState extends State<SurveyScreen> {
   /// True when this is a correction workflow (load answers, allow edit+resubmit).
   bool get _isCorrectionMode => widget.surveyMode == 'correction';
 
-  /// True when resuming a draft (load answers, allow edit).
-  bool get _isDraftResume => widget.surveyMode == 'edit';
-
   /// Label shown in the app-bar subtitle.
   String get _modeLabel {
     switch (widget.surveyMode) {
@@ -516,18 +513,6 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
   /// True when B.1 virtual questions exist in the current question list.
   bool get _hasB1Section => _questions.any((q) => q.sectionId == _kB1SectionId);
-
-  /// The virtual section entry for B.1 used in section counting.
-  /// Returns null when no B.1 questions are present.
-  Map<String, dynamic>? get _b1VirtualSectionEntry {
-    if (!_hasB1Section) return null;
-    return {
-      'id': _kB1SectionId,
-      'title': _kB1SectionTitle,
-      'code': 'B1',
-      'displayOrder': -1, // virtual, not in _orderedSections
-    };
-  }
 
   // ── Existing section helpers ───────────────────────────────────────────────
 
@@ -970,17 +955,6 @@ class _SurveyScreenState extends State<SurveyScreen> {
     return best?['id'] as String?;
   }
 
-  /// Returns the ID of the last question in Section R, or an empty string if
-  /// Section R has no questions. Used as the trigger for R-GENDER-DECISION-MAKING.
-  String get _kLastRQuestionId {
-    final rId = _rSectionId;
-    if (rId == null) return '';
-    for (int i = _questions.length - 1; i >= 0; i--) {
-      if (_questions[i].sectionId == rId) return _questions[i].id;
-    }
-    return '';
-  }
-
   // ── Section S (Major Household Expenditure) helpers ──────────────────────
 
   /// Returns true when Section S (section_code == 'S' or 'SEC-S') exists.
@@ -1105,15 +1079,6 @@ class _SurveyScreenState extends State<SurveyScreen> {
     return c == 'X';
   });
 
-  /// The section_id of Section X, or null if not found.
-  String? get _xSectionId {
-    for (final s in _orderedSections) {
-      final c = s['code'] as String;
-      if (c == 'X') return s['id'] as String?;
-    }
-    return null;
-  }
-
   /// The display_order of Section X, or -1 if not found.
   int get _xSectionDisplayOrder {
     for (final s in _orderedSections) {
@@ -1163,15 +1128,6 @@ class _SurveyScreenState extends State<SurveyScreen> {
     return c == 'Y';
   });
 
-  /// The section_id of Section Y, or null if not found.
-  String? get _ySectionId {
-    for (final s in _orderedSections) {
-      final c = s['code'] as String;
-      if (c == 'Y') return s['id'] as String?;
-    }
-    return null;
-  }
-
   /// The display_order of Section Y, or -1 if not found.
   int get _ySectionDisplayOrder {
     for (final s in _orderedSections) {
@@ -1220,15 +1176,6 @@ class _SurveyScreenState extends State<SurveyScreen> {
     final c = s['code'] as String;
     return c == 'Z';
   });
-
-  /// The section_id of Section Z, or null if not found.
-  String? get _zSectionId {
-    for (final s in _orderedSections) {
-      final c = s['code'] as String;
-      if (c == 'Z') return s['id'] as String?;
-    }
-    return null;
-  }
 
   /// The display_order of Section Z, or -1 if not found.
   int get _zSectionDisplayOrder {
@@ -1741,9 +1688,6 @@ class _SurveyScreenState extends State<SurveyScreen> {
     return true;
   }).length;
 
-  double get _progressPercent =>
-      _questions.isEmpty ? 0 : _answeredCount / _questions.length;
-
   bool get _canGoNext {
     if (_isASectionMode) {
       return true; // Section A validation is executed when clicking Next via FormKey
@@ -1810,36 +1754,6 @@ class _SurveyScreenState extends State<SurveyScreen> {
       return true;
     }
     return true;
-  }
-
-  /// Logical question number for the nav bar counter.
-  /// Section K's 11 questions count as 1 logical screen.
-  int get _logicalCurrentIndex {
-    if (_isKSectionMode) {
-      // Find the index of the first K question in _questions
-      final kId = _kSectionId;
-      if (kId != null) {
-        final firstKIdx = _questions.indexWhere((q) => q.sectionId == kId);
-        if (firstKIdx >= 0) return firstKIdx;
-      }
-    }
-    if (_isLSectionMode) {
-      final lId = _lSectionId;
-      if (lId != null) {
-        final firstLIdx = _questions.indexWhere((q) => q.sectionId == lId);
-        if (firstLIdx >= 0) return firstLIdx;
-      }
-    }
-    // Generic: if any registered specialized screen is active, use its trigger index
-    for (final entry in _specializedScreenRegistry) {
-      if (entry.isActive()) {
-        final triggerIdx = _questions.indexWhere(
-          (q) => q.id == entry.triggerQuestionId,
-        );
-        if (triggerIdx >= 0) return triggerIdx;
-      }
-    }
-    return _currentQuestionIndex;
   }
 
   /// Logical total questions for the nav bar counter.
@@ -2448,8 +2362,6 @@ class _SurveyScreenState extends State<SurveyScreen> {
       // without Supabase, so we look for any cached entry).
       // We store the templateId in the payload itself, so we query by a known
       // convention: try the most recent cache entry.
-      final pending = await LocalDatabaseService.instance
-          .getPendingSyncOperations();
       // Use the surveyId's cached templateId if available, otherwise use a
       // generic lookup. We query the raw DB for the most recent cache entry.
       Map<String, dynamic>? cacheRow;
@@ -6182,7 +6094,6 @@ class _SurveyScreenState extends State<SurveyScreen> {
   /// with a dynamically calculated read-only total at the bottom.
   Widget _buildKSectionWidget(ThemeData theme) {
     final kQuestions = _kNumericQuestions;
-    final controllers = <String, TextEditingController>{};
 
     // Calculate total from current answers
     double total = 0;
@@ -6328,8 +6239,6 @@ class _SurveyScreenState extends State<SurveyScreen> {
     int total,
   ) {
     final currentValue = _answers[question.id]?.toString() ?? '';
-    final isFirst = index == 0;
-    final isLast = index == total - 1;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

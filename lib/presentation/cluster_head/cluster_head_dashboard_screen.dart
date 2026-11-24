@@ -80,7 +80,7 @@ class _ClusterHeadDashboardScreenState
             .select('id')
             .inFilter('household_id', householdIds)
             .count();
-        memberCount = membersResp.count ?? 0;
+        memberCount = membersResp.count;
       }
 
       // Get surveys
@@ -128,7 +128,7 @@ class _ClusterHeadDashboardScreenState
             .inFilter('household_id', householdIds)
             .eq('is_answered', false)
             .count();
-        openQuestions = qResp.count ?? 0;
+        openQuestions = qResp.count;
       }
 
       if (mounted) {

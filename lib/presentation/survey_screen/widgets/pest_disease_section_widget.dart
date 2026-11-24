@@ -1517,34 +1517,6 @@ class _LivestockPestDiseaseSectionWidgetState
     }
   }
 
-  /// Helper widget for the error dialog rows.
-  Widget _errorRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: RichText(
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: '$label: ',
-              style: GoogleFonts.manrope(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: Colors.grey.shade700,
-              ),
-            ),
-            TextSpan(
-              text: value,
-              style: GoogleFonts.manrope(
-                fontSize: 11,
-                color: Colors.grey.shade900,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _deleteRecord(LivestockPestDiseaseRecord record) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -2112,7 +2084,7 @@ class _LivestockFormDialogState extends State<_LivestockFormDialog> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      editTitle,
+                      widget.existing.livestockName.isNotEmpty ? editTitle : title,
                       style: GoogleFonts.manrope(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,

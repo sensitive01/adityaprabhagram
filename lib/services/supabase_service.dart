@@ -25,7 +25,7 @@ class SupabaseService {
         'SUPABASE_URL and SUPABASE_ANON_KEY must be defined using --dart-define.',
       );
     }
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+    await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
     _isInitialized = true;
   }
 

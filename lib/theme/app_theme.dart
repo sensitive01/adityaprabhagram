@@ -9,7 +9,7 @@ class AppTheme {
   static const Color primary = Color(0xFF2D6A4F);
   static const Color primaryLight = Color(0xFF40916C);
   static const Color primaryContainer = Color(0xFFD8F3DC);
-  static const Color primaryMuted = Color(0xff2d6a4f99);
+  static const Color primaryMuted = Color(0x992D6A4F);
 
   static const Color secondary = Color(0xFF52B788);
   static const Color secondaryContainer = Color(0xFFB7E4C7);

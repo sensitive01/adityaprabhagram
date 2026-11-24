@@ -127,21 +127,6 @@ class _AdminSurveyQuestionsScreenState
     }
   }
 
-  Future<bool> _optionHasAnswers(String optionValue, String questionId) async {
-    try {
-      // answer_options is a TEXT[] column; check if any answer references this option value
-      final result = await SupabaseService.instance.client
-          .from('survey_answers')
-          .select('id')
-          .eq('question_id', questionId)
-          .contains('answer_options', [optionValue])
-          .limit(1);
-      return (result as List).isNotEmpty;
-    } catch (_) {
-      return false;
-    }
-  }
-
   // ── Template CRUD ─────────────────────────────────────────────────────────
 
   void _showCreateTemplateDialog() {
@@ -493,7 +478,7 @@ class _AdminSurveyQuestionsScreenState
                 : ReorderableListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     itemCount: _sections.length,
-                    onReorder: _reorderSection,
+                    onReorderItem: _reorderSection,
                     itemBuilder: (_, i) => _sectionTile(_sections[i], i),
                   ),
           ),
@@ -720,7 +705,7 @@ class _AdminSurveyQuestionsScreenState
     return ReorderableListView.builder(
       padding: const EdgeInsets.all(12),
       itemCount: _questions.length,
-      onReorder: _reorderQuestion,
+      onReorderItem: _reorderQuestion,
       itemBuilder: (_, i) => _buildQuestionCard(_questions[i], i),
     );
   }
@@ -1773,6 +1758,8 @@ class _OptionsManagerDialogState extends State<_OptionsManagerDialog> {
       hasAnswers = (result as List).isNotEmpty;
     } catch (_) {}
 
+    if (!mounted) return;
+
     if (hasAnswers) {
       // Must deactivate instead of delete
       final confirmed = await AdminConfirmDialog.show(
@@ -1919,7 +1906,7 @@ class _OptionsManagerDialogState extends State<_OptionsManagerDialog> {
                   child: ReorderableListView.builder(
                     shrinkWrap: true,
                     itemCount: _options.length,
-                    onReorder: _reorderOptions,
+                    onReorderItem: _reorderOptions,
                     itemBuilder: (_, i) {
                       final opt = _options[i];
                       final isActive = opt['is_active'] as bool? ?? true;

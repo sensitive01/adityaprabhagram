@@ -129,7 +129,6 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     final surveys = _reportData['surveys'] as List? ?? [];
     final households = _reportData['households'] as List? ?? [];
     final clusters = _reportData['clusters'] as List? ?? [];
-    final users = _reportData['users'] as List? ?? [];
 
     final totalSurveys = surveys.length;
     final approvedSurveys = surveys

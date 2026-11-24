@@ -90,17 +90,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       if (mounted) {
         setState(() {
           _stats = {
-            'clusters': clustersResp.count ?? 0,
-            'clusterHeads': chResp.count ?? 0,
-            'fieldAgents': agentsResp.count ?? 0,
-            'households': hhResp.count ?? 0,
-            'members': membersResp.count ?? 0,
-            'submitted': submittedResp.count ?? 0,
-            'draft': draftResp.count ?? 0,
-            'underReview': reviewResp.count ?? 0,
-            'correction': correctionResp.count ?? 0,
-            'approved': approvedResp.count ?? 0,
-            'openQuestions': openQResp.count ?? 0,
+            'clusters': clustersResp.count,
+            'clusterHeads': chResp.count,
+            'fieldAgents': agentsResp.count,
+            'households': hhResp.count,
+            'members': membersResp.count,
+            'submitted': submittedResp.count,
+            'draft': draftResp.count,
+            'underReview': reviewResp.count,
+            'correction': correctionResp.count,
+            'approved': approvedResp.count,
+            'openQuestions': openQResp.count,
           };
           _recentActivity = List<Map<String, dynamic>>.from(activity as List);
           _isLoading = false;

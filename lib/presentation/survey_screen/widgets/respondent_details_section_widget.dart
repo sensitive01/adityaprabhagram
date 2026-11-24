@@ -446,7 +446,7 @@ class RespondentDetailsSectionWidgetState
           ),
           const SizedBox(height: 6),
           DropdownButtonFormField<String>(
-            value: _salutation,
+            initialValue: _salutation,
             decoration: _inputDecoration(theme, 'Select Salutation'),
             items: _salutations.map((s) {
               return DropdownMenuItem(value: s, child: Text(s));
@@ -510,7 +510,7 @@ class RespondentDetailsSectionWidgetState
           ),
           const SizedBox(height: 6),
           DropdownButtonFormField<String>(
-            value: _relationshipToHead,
+            initialValue: _relationshipToHead,
             decoration: _inputDecoration(theme, 'Select Relationship'),
             items: _relationships.map((r) {
               return DropdownMenuItem(value: r, child: Text(r));
@@ -569,7 +569,7 @@ class RespondentDetailsSectionWidgetState
           // State
           _label('State *', theme),
           DropdownButtonFormField<String>(
-            value: states.contains(_selectedState) ? _selectedState : null,
+            initialValue: states.contains(_selectedState) ? _selectedState : null,
             decoration: _inputDecoration(theme, 'Select State'),
             items: states.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
             onChanged: widget.isReadOnly
@@ -597,7 +597,7 @@ class RespondentDetailsSectionWidgetState
           // District
           _label('District *', theme),
           DropdownButtonFormField<String>(
-            value: districts.contains(_selectedDistrict) ? _selectedDistrict : null,
+            initialValue: districts.contains(_selectedDistrict) ? _selectedDistrict : null,
             decoration: _inputDecoration(theme, 'Select District'),
             items: districts.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
             onChanged: widget.isReadOnly
@@ -623,7 +623,7 @@ class RespondentDetailsSectionWidgetState
           // Block
           _label('Block *', theme),
           DropdownButtonFormField<String>(
-            value: blocks.contains(_selectedBlock) ? _selectedBlock : null,
+            initialValue: blocks.contains(_selectedBlock) ? _selectedBlock : null,
             decoration: _inputDecoration(theme, 'Select Block'),
             items: blocks.map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(),
             onChanged: widget.isReadOnly
@@ -645,7 +645,7 @@ class RespondentDetailsSectionWidgetState
           // Village
           _label('Village *', theme),
           DropdownButtonFormField<String>(
-            value: _isOtherVillage
+            initialValue: _isOtherVillage
                 ? 'Other / Not Listed'
                 : (villages.any((v) => v.villageName == _selectedVillage)
                     ? _selectedVillage
@@ -886,7 +886,7 @@ class RespondentDetailsSectionWidgetState
           // A9: Preferred Interview Language
           _label('A9. Preferred Interview Language *', theme),
           DropdownButtonFormField<String>(
-            value: _preferredLanguage,
+            initialValue: _preferredLanguage,
             decoration: _inputDecoration(theme, 'Select Language'),
             items: _languages.map((l) => DropdownMenuItem(value: l, child: Text(l))).toList(),
             onChanged: widget.isReadOnly

@@ -721,28 +721,30 @@ class _GenderDecisionMakingSectionWidgetState
                 : theme.colorScheme.outline.withAlpha(51),
           ),
         ),
-        child: Row(
-          children: [
-            Radio<String>(
-              value: value,
-              groupValue: groupValue,
-              onChanged: onChanged,
-              activeColor: AppTheme.primary,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: VisualDensity.compact,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: GoogleFonts.manrope(
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected
-                    ? AppTheme.primary
-                    : theme.colorScheme.onSurface,
+        child: RadioGroup<String>(
+          groupValue: groupValue,
+          onChanged: onChanged ?? (_) {},
+          child: Row(
+            children: [
+              Radio<String>(
+                value: value,
+                activeColor: AppTheme.primary,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
               ),
-            ),
-          ],
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: GoogleFonts.manrope(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected
+                      ? AppTheme.primary
+                      : theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -775,31 +777,33 @@ class _GenderDecisionMakingSectionWidgetState
                   : theme.colorScheme.outline.withAlpha(51),
             ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Radio<String>(
-                value: value,
-                groupValue: groupValue,
-                onChanged: onChanged,
-                activeColor: AppTheme.primary,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
-              ),
-              Flexible(
-                child: Text(
-                  label,
-                  style: GoogleFonts.manrope(
-                    fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected
-                        ? AppTheme.primary
-                        : theme.colorScheme.onSurface,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+          child: RadioGroup<String>(
+            groupValue: groupValue,
+            onChanged: onChanged ?? (_) {},
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Radio<String>(
+                  value: value,
+                  activeColor: AppTheme.primary,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
                 ),
-              ),
-            ],
+                Flexible(
+                  child: Text(
+                    label,
+                    style: GoogleFonts.manrope(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      color: isSelected
+                          ? AppTheme.primary
+                          : theme.colorScheme.onSurface,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

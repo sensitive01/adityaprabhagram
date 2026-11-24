@@ -54,9 +54,8 @@ class _ActivityRow {
     required this.code,
     required this.label,
     required this.isOther,
-    this.frequency = '',
-    this.otherText = '',
-  });
+  }) : frequency = '',
+       otherText = '';
 
   Map<String, dynamic> toJson() => {
     'code': code,
@@ -64,21 +63,6 @@ class _ActivityRow {
     'frequency': frequency,
     if (isOther) 'otherText': otherText,
   };
-
-  factory _ActivityRow.fromJson(
-    Map<String, dynamic> json,
-    String code,
-    String label,
-    bool isOther,
-  ) {
-    return _ActivityRow(
-      code: code,
-      label: label,
-      isOther: isOther,
-      frequency: (json['frequency'] as String?) ?? '',
-      otherText: (json['otherText'] as String?) ?? '',
-    );
-  }
 }
 
 // ─── Main Widget ──────────────────────────────────────────────────────────────

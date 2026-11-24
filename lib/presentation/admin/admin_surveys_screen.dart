@@ -27,7 +27,6 @@ class _AdminSurveysScreenState extends State<AdminSurveysScreen> {
   String _searchQuery = '';
   int _currentPage = 0;
   static const int _pageSize = 20;
-  Map<String, String> _questionLabels = {};
   Map<String, Map<String, dynamic>> _questionMeta = {};
 
   // Caches for specialized section data keyed by survey_id
@@ -80,13 +79,11 @@ class _AdminSurveysScreenState extends State<AdminSurveysScreen> {
             .eq('is_active', true),
       ]);
       if (mounted) {
-        final labels = <String, String>{};
         final meta = <String, Map<String, dynamic>>{};
         for (final row in (results[1] as List)) {
           final id = row['id'] as String?;
           final text = row['question_text'] as String?;
           if (id != null && text != null) {
-            labels[id] = text;
             final sectionData = row['survey_sections'] as Map<String, dynamic>?;
             meta[id] = {
               'question_text': text,
@@ -99,7 +96,6 @@ class _AdminSurveysScreenState extends State<AdminSurveysScreen> {
         }
         setState(() {
           _surveys = List<Map<String, dynamic>>.from(results[0] as List);
-          _questionLabels = labels;
           _questionMeta = meta;
           _isLoading = false;
         });
@@ -904,7 +900,7 @@ class _AdminSurveysScreenState extends State<AdminSurveysScreen> {
   /// Converts raw survey response values to human-readable strings.
   /// - List → comma-separated items
   /// - Map with "selections" key → comma-separated selections,
-  ///   with "Other: <specifyText>" appended when specifyText is non-empty
+  ///   with "Other: `specifyText`" appended when specifyText is non-empty
   /// - Everything else → plain toString()
   String _formatResponseValue(dynamic value) {
     if (value == null) return '—';
