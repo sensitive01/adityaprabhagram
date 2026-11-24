@@ -807,7 +807,7 @@ class HouseholdAssetsSectionWidgetState
                       icon: Icons.check_circle_rounded,
                       isSelected: _hasLand == true,
                       selectedColor: AppTheme.primary,
-                      selectedBg: AppTheme.primaryContainer,
+                      selectedBg: AppTheme.primary,
                       onTap: () => setState(() => _hasLand = true),
                     ),
                   ),
@@ -817,8 +817,8 @@ class HouseholdAssetsSectionWidgetState
                       label: 'No',
                       icon: Icons.cancel_rounded,
                       isSelected: _hasLand == false,
-                      selectedColor: Colors.grey.shade700,
-                      selectedBg: Colors.grey.shade200,
+                      selectedColor: const Color(0xFF475569),
+                      selectedBg: const Color(0xFF475569),
                       onTap: () => setState(() => _hasLand = false),
                     ),
                   ),
@@ -906,17 +906,17 @@ class HouseholdAssetsSectionWidgetState
                         reason,
                         style: GoogleFonts.manrope(
                           fontSize: 13,
-                          fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
-                          color: sel ? AppTheme.primary : _neutralDark,
+                          fontWeight: sel ? FontWeight.w700 : FontWeight.w600,
+                          color: sel ? const Color(0xFF1B4332) : const Color(0xFF1E293B),
                         ),
                       ),
                       selected: sel,
-                      selectedColor: AppTheme.primaryContainer,
-                      backgroundColor: Colors.grey.shade100,
-                      checkmarkColor: AppTheme.primary,
+                      selectedColor: const Color(0xFFD8F3DC),
+                      backgroundColor: Colors.white,
+                      checkmarkColor: const Color(0xFF1B4332),
                       side: BorderSide(
-                        color: sel ? AppTheme.primary : Colors.grey.shade300,
-                        width: sel ? 1.4 : 1.0,
+                        color: sel ? const Color(0xFF2D6A4F) : Colors.grey.shade300,
+                        width: sel ? 1.5 : 1.0,
                       ),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       onSelected: widget.isReadOnly
@@ -1205,17 +1205,17 @@ class HouseholdAssetsSectionWidgetState
                       source,
                       style: GoogleFonts.manrope(
                         fontSize: 13,
-                        fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
-                        color: sel ? AppTheme.primary : _neutralDark,
+                        fontWeight: sel ? FontWeight.w700 : FontWeight.w600,
+                        color: sel ? const Color(0xFF1B4332) : const Color(0xFF1E293B),
                       ),
                     ),
                     selected: sel,
-                    selectedColor: AppTheme.primaryContainer,
-                    backgroundColor: Colors.grey.shade100,
-                    checkmarkColor: AppTheme.primary,
+                    selectedColor: const Color(0xFFD8F3DC),
+                    backgroundColor: Colors.white,
+                    checkmarkColor: const Color(0xFF1B4332),
                     side: BorderSide(
-                      color: sel ? AppTheme.primary : Colors.grey.shade300,
-                      width: sel ? 1.4 : 1.0,
+                      color: sel ? const Color(0xFF2D6A4F) : Colors.grey.shade300,
+                      width: sel ? 1.5 : 1.0,
                     ),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     onSelected: widget.isReadOnly
@@ -1316,17 +1316,17 @@ class HouseholdAssetsSectionWidgetState
                       constraint,
                       style: GoogleFonts.manrope(
                         fontSize: 13,
-                        fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
-                        color: sel ? AppTheme.primary : _neutralDark,
+                        fontWeight: sel ? FontWeight.w700 : FontWeight.w600,
+                        color: sel ? const Color(0xFF1B4332) : const Color(0xFF1E293B),
                       ),
                     ),
                     selected: sel,
-                    selectedColor: AppTheme.primaryContainer,
-                    backgroundColor: Colors.grey.shade100,
-                    checkmarkColor: AppTheme.primary,
+                    selectedColor: const Color(0xFFD8F3DC),
+                    backgroundColor: Colors.white,
+                    checkmarkColor: const Color(0xFF1B4332),
                     side: BorderSide(
-                      color: sel ? AppTheme.primary : Colors.grey.shade300,
-                      width: sel ? 1.4 : 1.0,
+                      color: sel ? const Color(0xFF2D6A4F) : Colors.grey.shade300,
+                      width: sel ? 1.5 : 1.0,
                     ),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     onSelected: widget.isReadOnly
@@ -2176,6 +2176,11 @@ class HouseholdAssetsSectionWidgetState
     required Color selectedBg,
     required VoidCallback onTap,
   }) {
+    final effectiveBg = isSelected ? selectedColor : Colors.white;
+    final effectiveFg = isSelected ? Colors.white : const Color(0xFF1E293B);
+    final effectiveBorder = isSelected ? selectedColor : Colors.grey.shade300;
+    final effectiveIconColor = isSelected ? Colors.white : Colors.grey.shade700;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -2185,12 +2190,27 @@ class HouseholdAssetsSectionWidgetState
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            color: isSelected ? selectedBg : Colors.grey.shade50,
+            color: effectiveBg,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: isSelected ? selectedColor : Colors.grey.shade300,
-              width: isSelected ? 1.8 : 1.0,
+              color: effectiveBorder,
+              width: isSelected ? 1.8 : 1.2,
             ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: selectedColor.withValues(alpha: 0.32),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    )
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 2,
+                      offset: const Offset(0, 1),
+                    )
+                  ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -2198,15 +2218,15 @@ class HouseholdAssetsSectionWidgetState
               Icon(
                 icon,
                 size: 20,
-                color: isSelected ? selectedColor : Colors.grey.shade600,
+                color: effectiveIconColor,
               ),
               const SizedBox(width: 8),
               Text(
                 label,
                 style: GoogleFonts.manrope(
                   fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                  color: isSelected ? selectedColor : Colors.grey.shade800,
+                  fontWeight: FontWeight.w700,
+                  color: effectiveFg,
                 ),
               ),
             ],
@@ -2222,17 +2242,17 @@ class HouseholdAssetsSectionWidgetState
         label,
         style: GoogleFonts.manrope(
           fontSize: 13,
-          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-          color: isSelected ? AppTheme.primary : _neutralDark,
+          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+          color: isSelected ? const Color(0xFF1B4332) : const Color(0xFF1E293B),
         ),
       ),
       selected: isSelected,
-      selectedColor: AppTheme.primaryContainer,
-      backgroundColor: Colors.grey.shade100,
-      checkmarkColor: AppTheme.primary,
+      selectedColor: const Color(0xFFD8F3DC),
+      backgroundColor: Colors.white,
+      checkmarkColor: const Color(0xFF1B4332),
       side: BorderSide(
-        color: isSelected ? AppTheme.primary : Colors.grey.shade300,
-        width: isSelected ? 1.4 : 1.0,
+        color: isSelected ? const Color(0xFF2D6A4F) : Colors.grey.shade300,
+        width: isSelected ? 1.5 : 1.0,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       onSelected: widget.isReadOnly ? null : (_) => onSelected(),

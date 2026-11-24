@@ -17,6 +17,7 @@ import './widgets/employment_seasonality_section_widget.dart';
 import './widgets/asset_matrix_section_widget.dart';
 import './widgets/livestock_section_widget.dart';
 import './widgets/cropping_pattern_section_widget.dart';
+import './widgets/agricultural_information_section_widget.dart';
 import './widgets/question_card_widget.dart';
 import './widgets/itk_table_widget.dart';
 import './widgets/scheme_matrix_section_widget.dart';
@@ -421,6 +422,13 @@ class _SurveyScreenState extends State<SurveyScreen> {
   /// GlobalKey for Section C (Household Assets / Land / Livestock) widget.
   final GlobalKey<HouseholdAssetsSectionWidgetState> _householdAssetsKey =
       GlobalKey<HouseholdAssetsSectionWidgetState>();
+
+  /// GlobalKey for Section D (Agricultural Information) widget.
+  final GlobalKey<AgriculturalInformationSectionWidgetState> _agriculturalInfoKey =
+      GlobalKey<AgriculturalInformationSectionWidgetState>();
+
+  /// Sub-page index for Section D (0: Practices & Seeds, 1: Cropping Matrix & Crop Details).
+  int _dSectionPageIndex = 0;
 
   /// Tracks the survey UUID for the current session.
   /// Initialised from widget.surveyId; updated after a new draft is created.
@@ -934,6 +942,22 @@ class _SurveyScreenState extends State<SurveyScreen> {
     final cId = _cSectionId;
     if (cId == null) return false;
     return _currentSectionId == cId;
+  }
+
+  /// Returns true when Section D exists in the active sections.
+  bool get _hasDSection => _orderedSections.any((s) {
+    final c = (s['code'] as String? ?? '').toUpperCase();
+    return c == 'D' || c == 'SEC-D' || c.startsWith('D-');
+  });
+
+  /// True when the questionnaire is showing Section D (Agricultural Information)
+  /// as a unified 2-page experience (Practices/Seeds & Cropping Pattern/Repeatable Crops).
+  bool get _isDSectionMode {
+    if (_isReviewMode) return false;
+    if (_questions.isEmpty) return false;
+    final dId = _dSectionId;
+    if (dId == null) return false;
+    return _currentSectionId == dId;
   }
 
   // ── Section O (Government Schemes) helpers ────────────────────────────────
@@ -2868,6 +2892,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
         final firstIdx = _questions.indexWhere((q) => q.sectionId == afterCId);
         if (firstIdx >= 0) {
           setState(() {
+            _dSectionPageIndex = 0;
             _currentQuestionIndex = firstIdx;
           });
           return;
@@ -2875,6 +2900,46 @@ class _SurveyScreenState extends State<SurveyScreen> {
       }
       final nextIdx = _questions.indexWhere(
           (q) => q.sectionId != _cSectionId && q.sectionId != _bSectionId && q.sectionId != _aSectionId);
+      if (nextIdx >= 0) {
+        setState(() {
+          _dSectionPageIndex = 0;
+          _currentQuestionIndex = nextIdx;
+        });
+        return;
+      }
+      setState(() {
+        _isReviewMode = true;
+      });
+      return;
+    }
+
+    // ── Section D (Agricultural Information / Cropping System) mode ───────
+    if (_isDSectionMode) {
+      final state = _agriculturalInfoKey.currentState;
+      if (state != null) {
+        if (!state.validateCurrentPage()) return;
+        if (_dSectionPageIndex < 1) {
+          setState(() {
+            _dSectionPageIndex++;
+            state.goToPage(_dSectionPageIndex);
+          });
+          return;
+        }
+        state.saveData();
+      }
+      _dSectionPageIndex = 0;
+      final afterDId = _sectionAfterD;
+      if (afterDId != null) {
+        final firstIdx = _questions.indexWhere((q) => q.sectionId == afterDId);
+        if (firstIdx >= 0) {
+          setState(() {
+            _currentQuestionIndex = firstIdx;
+          });
+          return;
+        }
+      }
+      final nextIdx = _questions.indexWhere(
+          (q) => q.sectionId != _dSectionId && q.sectionId != _cSectionId && q.sectionId != _bSectionId && q.sectionId != _aSectionId);
       if (nextIdx >= 0) {
         setState(() {
           _currentQuestionIndex = nextIdx;
@@ -3911,6 +3976,35 @@ class _SurveyScreenState extends State<SurveyScreen> {
       return;
     }
 
+    // ── In Section D (Agricultural Information) mode ─────────────
+    if (_isDSectionMode) {
+      final state = _agriculturalInfoKey.currentState;
+      if (_dSectionPageIndex > 0) {
+        setState(() {
+          _dSectionPageIndex--;
+          state?.goToPage(_dSectionPageIndex);
+        });
+        return;
+      }
+      // On page 0: go back to Section C!
+      _agriculturalInfoKey.currentState?.saveData();
+      final cId = _cSectionId;
+      if (cId != null) {
+        final cIdx = _questions.indexWhere((q) => q.sectionId == cId);
+        if (cIdx >= 0) {
+          setState(() {
+            _cSectionPageIndex = 3;
+            _currentQuestionIndex = cIdx;
+          });
+          return;
+        }
+      }
+      setState(() {
+        _currentQuestionIndex = 0;
+      });
+      return;
+    }
+
     // ── In Section C (Land, Water, Assets, Livestock) mode ───────
     if (_isCSectionMode) {
       final state = _householdAssetsKey.currentState;
@@ -4765,8 +4859,27 @@ class _SurveyScreenState extends State<SurveyScreen> {
       }
     }
 
-    // ── At first question of section after D: go back into Q9 mode ─────────
-    if (_hasCroppingPatternSection) {
+    // ── At first question of section after D: go back into Section D mode ─────────
+    if (_hasDSection) {
+      final afterDId = _sectionAfterD;
+      if (afterDId != null) {
+        final currentSecId = _questions[_currentQuestionIndex].sectionId;
+        if (currentSecId == afterDId) {
+          final firstVisibleInAfterD = _questions.indexWhere(
+            (q) => q.sectionId == afterDId && _isQuestionVisible(q),
+          );
+          if (firstVisibleInAfterD == _currentQuestionIndex) {
+            final dId = _dSectionId;
+            final dIdx = dId != null ? _questions.indexWhere((q) => q.sectionId == dId) : -1;
+            setState(() {
+              _dSectionPageIndex = 1;
+              if (dIdx >= 0) _currentQuestionIndex = dIdx;
+            });
+            return;
+          }
+        }
+      }
+    } else if (_hasCroppingPatternSection) {
       final afterDId = _sectionAfterD;
       if (afterDId != null) {
         final currentSecId = _questions[_currentQuestionIndex].sectionId;
@@ -5030,6 +5143,16 @@ class _SurveyScreenState extends State<SurveyScreen> {
     try {
       final client = SupabaseService.instance.client;
 
+      // ── Flush all active specialized widgets to _answers before saving ───
+      _respondentDetailsKey.currentState?.saveData();
+      _householdProfileKey.currentState?.saveData();
+      _householdAssetsKey.currentState?.saveData();
+      _lSectionKey.currentState?.saveData();
+      _assetMatrixKey.currentState?.saveData();
+      _livestockSectionKey.currentState?.saveData();
+      _croppingPatternKey.currentState?.saveData();
+      _agriculturalInfoKey.currentState?.saveData();
+
       // ── DIAGNOSTIC LOGGING (temporary) ──────────────────────────────────
       final authUser = SupabaseService.instance.currentUser;
       String diagRole = 'UNKNOWN';
@@ -5182,6 +5305,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
         _assetMatrixKey.currentState?.saveData();
         _livestockSectionKey.currentState?.saveData();
         _croppingPatternKey.currentState?.saveData();
+        _agriculturalInfoKey.currentState?.saveData();
       }
 
       Fluttertoast.showToast(
@@ -5198,7 +5322,6 @@ class _SurveyScreenState extends State<SurveyScreen> {
           if (_currentSurveyId == null || _currentSurveyId!.isEmpty) {
             _currentSurveyId = const Uuid().v4();
           }
-          await _mirrorDraftToLocalDb(uid: uid, status: 'draft');
           _respondentDetailsKey.currentState?.saveData();
           _householdProfileKey.currentState?.saveData();
           _householdAssetsKey.currentState?.saveData();
@@ -5206,6 +5329,9 @@ class _SurveyScreenState extends State<SurveyScreen> {
           _assetMatrixKey.currentState?.saveData();
           _livestockSectionKey.currentState?.saveData();
           _croppingPatternKey.currentState?.saveData();
+          _agriculturalInfoKey.currentState?.saveData();
+
+          await _mirrorDraftToLocalDb(uid: uid, status: 'draft');
           if (mounted) setState(() => _isSavingDraft = false);
           Fluttertoast.showToast(
             msg: 'Server unavailable — draft saved locally and queued for sync',
@@ -5251,11 +5377,16 @@ class _SurveyScreenState extends State<SurveyScreen> {
         _currentSurveyId = const Uuid().v4();
       }
 
-      await _mirrorDraftToLocalDb(uid: uid, status: status);
       _respondentDetailsKey.currentState?.saveData();
       _householdProfileKey.currentState?.saveData();
       _householdAssetsKey.currentState?.saveData();
+      _lSectionKey.currentState?.saveData();
       await _assetMatrixKey.currentState?.saveData();
+      _livestockSectionKey.currentState?.saveData();
+      _croppingPatternKey.currentState?.saveData();
+      _agriculturalInfoKey.currentState?.saveData();
+
+      await _mirrorDraftToLocalDb(uid: uid, status: status);
       if (mounted) setState(() => _isSavingDraft = false);
       Fluttertoast.showToast(
         msg: 'Draft saved locally — will sync when online',
@@ -5556,6 +5687,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                         _isXSectionMode ||
                         _isYSectionMode ||
                         _isZSectionMode ||
+                        _isDSectionMode ||
                         _isCSectionMode ||
                         _isAssetMatrixMode ||
                         _isLivestockSectionMode)
@@ -5605,10 +5737,18 @@ class _SurveyScreenState extends State<SurveyScreen> {
                               onSave: (_) {},
                             )
                           : null,
-                      householdAssetsWidget: _hasAssetMatrixSection
+                      householdAssetsWidget: _hasAssetMatrixSection || _hasCSection
                           ? HouseholdAssetsSectionWidget(
                               householdId: widget.householdId,
                               surveyId: _currentSurveyId,
+                              initialAnswers: _answers,
+                              isReadOnly: true,
+                            )
+                          : null,
+                      agriculturalInfoWidget: _hasDSection || _hasCroppingPatternSection
+                          ? AgriculturalInformationSectionWidget(
+                              householdId: widget.householdId,
+                              surveyId: _currentSurveyId ?? '',
                               initialAnswers: _answers,
                               isReadOnly: true,
                             )
@@ -5956,6 +6096,25 @@ class _SurveyScreenState extends State<SurveyScreen> {
                         isReadOnly: _isReadOnly,
                       ),
                     )
+                  : _isDSectionMode
+                  ? SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isTablet ? 40 : 16,
+                        vertical: 16,
+                      ),
+                      child: AgriculturalInformationSectionWidget(
+                        key: _agriculturalInfoKey,
+                        householdId: widget.householdId,
+                        surveyId: _currentSurveyId ?? '',
+                        initialAnswers: _answers,
+                        isReadOnly: _isReadOnly,
+                        onDataChanged: (updated) {
+                          setState(() {
+                            _answers.addAll(updated);
+                          });
+                        },
+                      ),
+                    )
                   : _isCSectionMode
                   ? SingleChildScrollView(
                       padding: EdgeInsets.symmetric(
@@ -6132,6 +6291,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                     _isXSectionMode ||
                     _isYSectionMode ||
                     _isZSectionMode ||
+                    _isDSectionMode ||
                     _isCSectionMode ||
                     _isAssetMatrixMode ||
                     _isLivestockSectionMode ||
@@ -6152,6 +6312,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                         _isXSectionMode ||
                         _isYSectionMode ||
                         _isZSectionMode ||
+                        _isDSectionMode ||
                         _isCSectionMode ||
                         _isAssetMatrixMode ||
                         _isLivestockSectionMode ||
