@@ -113,7 +113,8 @@ class RespondentDetailsSectionWidgetState
     // Location
     _selectedState = ans['A5_state'] as String? ?? 'Manipur';
     _selectedDistrict = ans['A5_district'] as String? ?? 'Churachandpur';
-    _selectedBlock = ans['A5_block'] as String? ?? 'Lamka';
+    _selectedBlock =
+        ans['A5_block'] as String? ?? ans['A5_city'] as String? ?? 'Lamka';
     _selectedVillage = ans['A5_village'] as String? ?? 'Tuibong';
     _isOtherVillage = ans['A5_is_other_village'] as bool? ?? false;
     _otherVillageController = TextEditingController(
@@ -217,6 +218,7 @@ class RespondentDetailsSectionWidgetState
       'A5_state': _selectedState,
       'A5_district': _selectedDistrict,
       'A5_block': _selectedBlock,
+      'A5_city': _selectedBlock,
       'A5_village': _isOtherVillage
           ? _otherVillageController.text.trim()
           : _selectedVillage,
@@ -561,7 +563,7 @@ class RespondentDetailsSectionWidgetState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Cascading selection auto-populates LGD codes and administrative units.',
+            'Cascading selection auto-populates LGD codes and administrative units based on State -> District -> City / Block -> Village.',
             style: GoogleFonts.manrope(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 14),
@@ -620,11 +622,11 @@ class RespondentDetailsSectionWidgetState
           ),
           const SizedBox(height: 12),
 
-          // Block
-          _label('Block *', theme),
+          // City / Block
+          _label('City / Block *', theme),
           DropdownButtonFormField<String>(
             initialValue: blocks.contains(_selectedBlock) ? _selectedBlock : null,
-            decoration: _inputDecoration(theme, 'Select Block'),
+            decoration: _inputDecoration(theme, 'Select City / Block'),
             items: blocks.map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(),
             onChanged: widget.isReadOnly
                 ? null
@@ -750,13 +752,15 @@ class RespondentDetailsSectionWidgetState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // A6: Mobile
-          _label('A6. Mobile Number (10 digits, begins with 6/7/8/9)', theme),
+          _label('A6. Mobile Number (10 digits, begins with 6/7/8/9) *', theme),
           TextFormField(
             controller: _mobileController,
             readOnly: widget.isReadOnly,
             keyboardType: TextInputType.phone,
             maxLength: 10,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            inputFormatters: [
+              _IndianMobileInputFormatter(),
+            ],
             decoration: _inputDecoration(theme, 'Enter 10-digit mobile number')
                 .copyWith(counterText: ''),
             validator: (v) {
@@ -1004,5 +1008,36 @@ class _UpperCaseTextFormatter extends TextInputFormatter {
       text: newValue.text.toUpperCase(),
       selection: newValue.selection,
     );
+  }
+}
+
+/// Restricts user input so that:
+/// - Only numeric digits are accepted
+/// - The very first typed character MUST be 6, 7, 8, or 9
+/// - Rejects typing or pasting anything starting with 0-5
+/// - Max length is capped at 10 digits
+class _IndianMobileInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text;
+    if (text.isEmpty) {
+      return newValue;
+    }
+    // Only numeric digits allowed
+    if (!RegExp(r'^\d+$').hasMatch(text)) {
+      return oldValue;
+    }
+    // First digit must strictly be 6, 7, 8, or 9
+    if (!RegExp(r'^[6-9]').hasMatch(text)) {
+      return oldValue;
+    }
+    // Maximum 10 digits
+    if (text.length > 10) {
+      return oldValue;
+    }
+    return newValue;
   }
 }
