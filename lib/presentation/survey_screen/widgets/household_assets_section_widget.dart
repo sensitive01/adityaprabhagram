@@ -801,13 +801,27 @@ class HouseholdAssetsSectionWidgetState
               const SizedBox(height: 12),
               Row(
                 children: [
-                  _choiceChip('Yes', _hasLand == true, () {
-                    setState(() => _hasLand = true);
-                  }),
+                  Expanded(
+                    child: _buildYesNoButton(
+                      label: 'Yes',
+                      icon: Icons.check_circle_rounded,
+                      isSelected: _hasLand == true,
+                      selectedColor: AppTheme.primary,
+                      selectedBg: AppTheme.primaryContainer,
+                      onTap: () => setState(() => _hasLand = true),
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  _choiceChip('No', _hasLand == false, () {
-                    setState(() => _hasLand = false);
-                  }),
+                  Expanded(
+                    child: _buildYesNoButton(
+                      label: 'No',
+                      icon: Icons.cancel_rounded,
+                      isSelected: _hasLand == false,
+                      selectedColor: Colors.grey.shade700,
+                      selectedBg: Colors.grey.shade200,
+                      onTap: () => setState(() => _hasLand = false),
+                    ),
+                  ),
                 ],
               ),
               if (_hasLand == false) ...[
@@ -888,8 +902,23 @@ class HouseholdAssetsSectionWidgetState
                   children: _kFallowReasons.map((reason) {
                     final sel = _selectedFallowReasons.contains(reason);
                     return FilterChip(
-                      label: Text(reason),
+                      label: Text(
+                        reason,
+                        style: GoogleFonts.manrope(
+                          fontSize: 13,
+                          fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
+                          color: sel ? AppTheme.primary : _neutralDark,
+                        ),
+                      ),
                       selected: sel,
+                      selectedColor: AppTheme.primaryContainer,
+                      backgroundColor: Colors.grey.shade100,
+                      checkmarkColor: AppTheme.primary,
+                      side: BorderSide(
+                        color: sel ? AppTheme.primary : Colors.grey.shade300,
+                        width: sel ? 1.4 : 1.0,
+                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       onSelected: widget.isReadOnly
                           ? null
                           : (val) {
@@ -1172,8 +1201,23 @@ class HouseholdAssetsSectionWidgetState
                 children: _kIrrigationSources.map((source) {
                   final sel = _selectedIrrigationSources.contains(source);
                   return FilterChip(
-                    label: Text(source),
+                    label: Text(
+                      source,
+                      style: GoogleFonts.manrope(
+                        fontSize: 13,
+                        fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
+                        color: sel ? AppTheme.primary : _neutralDark,
+                      ),
+                    ),
                     selected: sel,
+                    selectedColor: AppTheme.primaryContainer,
+                    backgroundColor: Colors.grey.shade100,
+                    checkmarkColor: AppTheme.primary,
+                    side: BorderSide(
+                      color: sel ? AppTheme.primary : Colors.grey.shade300,
+                      width: sel ? 1.4 : 1.0,
+                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     onSelected: widget.isReadOnly
                         ? null
                         : (val) {
@@ -1268,8 +1312,23 @@ class HouseholdAssetsSectionWidgetState
                 children: _kWaterConstraints.map((constraint) {
                   final sel = _selectedWaterConstraints.contains(constraint);
                   return FilterChip(
-                    label: Text(constraint),
+                    label: Text(
+                      constraint,
+                      style: GoogleFonts.manrope(
+                        fontSize: 13,
+                        fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
+                        color: sel ? AppTheme.primary : _neutralDark,
+                      ),
+                    ),
                     selected: sel,
+                    selectedColor: AppTheme.primaryContainer,
+                    backgroundColor: Colors.grey.shade100,
+                    checkmarkColor: AppTheme.primary,
+                    side: BorderSide(
+                      color: sel ? AppTheme.primary : Colors.grey.shade300,
+                      width: sel ? 1.4 : 1.0,
+                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     onSelected: widget.isReadOnly
                         ? null
                         : (val) {
@@ -1398,9 +1457,17 @@ class HouseholdAssetsSectionWidgetState
                     style: GoogleFonts.manrope(
                       fontSize: 12,
                       fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                      color: isSel ? AppTheme.primary : Colors.grey.shade800,
                     ),
                   ),
                   selected: isSel,
+                  selectedColor: AppTheme.primaryContainer,
+                  backgroundColor: Colors.grey.shade100,
+                  side: BorderSide(
+                    color: isSel ? AppTheme.primary : Colors.grey.shade300,
+                    width: isSel ? 1.4 : 1.0,
+                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   onSelected: widget.isReadOnly
                       ? null
                       : (val) {
@@ -2101,15 +2168,73 @@ class HouseholdAssetsSectionWidgetState
     );
   }
 
+  Widget _buildYesNoButton({
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required Color selectedColor,
+    required Color selectedBg,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: widget.isReadOnly ? null : onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            color: isSelected ? selectedBg : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isSelected ? selectedColor : Colors.grey.shade300,
+              width: isSelected ? 1.8 : 1.0,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: isSelected ? selectedColor : Colors.grey.shade600,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: GoogleFonts.manrope(
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                  color: isSelected ? selectedColor : Colors.grey.shade800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _choiceChip(String label, bool isSelected, VoidCallback onSelected) {
-    return ChoiceChip(
+    return FilterChip(
       label: Text(
         label,
         style: GoogleFonts.manrope(
+          fontSize: 13,
           fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          color: isSelected ? AppTheme.primary : _neutralDark,
         ),
       ),
       selected: isSelected,
+      selectedColor: AppTheme.primaryContainer,
+      backgroundColor: Colors.grey.shade100,
+      checkmarkColor: AppTheme.primary,
+      side: BorderSide(
+        color: isSelected ? AppTheme.primary : Colors.grey.shade300,
+        width: isSelected ? 1.4 : 1.0,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       onSelected: widget.isReadOnly ? null : (_) => onSelected(),
     );
   }

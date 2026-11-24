@@ -1891,15 +1891,24 @@ class _MemberFormDialogState extends State<_MemberFormDialog> {
   }
 
   Widget _choiceChip(String text, bool selected, VoidCallback onTap) {
-    return ChoiceChip(
-      label: Text(text),
+    return FilterChip(
+      label: Text(
+        text,
+        style: GoogleFonts.manrope(
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          color: selected ? AppTheme.primary : Colors.black87,
+        ),
+      ),
       selected: selected,
       onSelected: (_) => onTap(),
-      selectedColor: AppTheme.primary.withAlpha(40),
-      labelStyle: GoogleFonts.manrope(
-        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-        color: selected ? AppTheme.primary : Colors.black87,
+      selectedColor: AppTheme.primaryContainer,
+      backgroundColor: Colors.grey.shade100,
+      checkmarkColor: AppTheme.primary,
+      side: BorderSide(
+        color: selected ? AppTheme.primary : Colors.grey.shade300,
+        width: selected ? 1.4 : 1.0,
       ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     );
   }
 

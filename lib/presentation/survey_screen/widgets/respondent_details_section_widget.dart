@@ -571,7 +571,8 @@ class RespondentDetailsSectionWidgetState
           // State
           _label('State *', theme),
           DropdownButtonFormField<String>(
-            initialValue: states.contains(_selectedState) ? _selectedState : null,
+            key: ValueKey('state_$_selectedState'),
+            value: states.contains(_selectedState) ? _selectedState : null,
             decoration: _inputDecoration(theme, 'Select State'),
             items: states.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
             onChanged: widget.isReadOnly
@@ -579,12 +580,8 @@ class RespondentDetailsSectionWidgetState
                 : (val) {
                     setState(() {
                       _selectedState = val;
-                      final dList = LocationMasterData.getDistricts(val ?? '');
-                      _selectedDistrict = dList.isNotEmpty ? dList.first : null;
-                      final bList = (_selectedDistrict != null)
-                          ? LocationMasterData.getBlocks(val ?? '', _selectedDistrict!)
-                          : <String>[];
-                      _selectedBlock = bList.isNotEmpty ? bList.first : null;
+                      _selectedDistrict = null;
+                      _selectedBlock = null;
                       _selectedVillage = null;
                       _isOtherVillage = false;
                       _gramPanchayatController.clear();
@@ -599,7 +596,8 @@ class RespondentDetailsSectionWidgetState
           // District
           _label('District *', theme),
           DropdownButtonFormField<String>(
-            initialValue: districts.contains(_selectedDistrict) ? _selectedDistrict : null,
+            key: ValueKey('district_${_selectedState}_$_selectedDistrict'),
+            value: districts.contains(_selectedDistrict) ? _selectedDistrict : null,
             decoration: _inputDecoration(theme, 'Select District'),
             items: districts.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
             onChanged: widget.isReadOnly
@@ -607,10 +605,7 @@ class RespondentDetailsSectionWidgetState
                 : (val) {
                     setState(() {
                       _selectedDistrict = val;
-                      final bList = (_selectedState != null && val != null)
-                          ? LocationMasterData.getBlocks(_selectedState!, val)
-                          : <String>[];
-                      _selectedBlock = bList.isNotEmpty ? bList.first : null;
+                      _selectedBlock = null;
                       _selectedVillage = null;
                       _isOtherVillage = false;
                       _gramPanchayatController.clear();
@@ -625,7 +620,8 @@ class RespondentDetailsSectionWidgetState
           // City / Block
           _label('City / Block *', theme),
           DropdownButtonFormField<String>(
-            initialValue: blocks.contains(_selectedBlock) ? _selectedBlock : null,
+            key: ValueKey('block_${_selectedDistrict}_$_selectedBlock'),
+            value: blocks.contains(_selectedBlock) ? _selectedBlock : null,
             decoration: _inputDecoration(theme, 'Select City / Block'),
             items: blocks.map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(),
             onChanged: widget.isReadOnly
@@ -647,7 +643,8 @@ class RespondentDetailsSectionWidgetState
           // Village
           _label('Village *', theme),
           DropdownButtonFormField<String>(
-            initialValue: _isOtherVillage
+            key: ValueKey('village_${_selectedBlock}_$_selectedVillage'),
+            value: _isOtherVillage
                 ? 'Other / Not Listed'
                 : (villages.any((v) => v.villageName == _selectedVillage)
                     ? _selectedVillage
