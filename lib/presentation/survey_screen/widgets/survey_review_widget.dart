@@ -63,6 +63,10 @@ class SurveyReviewWidget extends StatelessWidget {
   /// Rendered at the position of the section with section_code == 'B' or 'SEC-B'.
   final Widget? householdProfileWidget;
 
+  /// The Section C structured widget (HouseholdAssetsSectionWidget in read-only mode).
+  /// Rendered at the position of the section with section_code == 'C' or 'SEC-C'.
+  final Widget? householdAssetsWidget;
+
   const SurveyReviewWidget({
     super.key,
     required this.questions,
@@ -82,6 +86,7 @@ class SurveyReviewWidget extends StatelessWidget {
     this.enumeratorObservationWidget,
     this.respondentDetailsWidget,
     this.householdProfileWidget,
+    this.householdAssetsWidget,
   });
 
   @override
@@ -202,6 +207,19 @@ class SurveyReviewWidget extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: householdProfileWidget!,
+            ),
+          );
+          continue;
+        }
+
+        // Section C: render the combined household assets / land / livestock widget
+        if ((code == 'C' || code == 'SEC-C' || code.startsWith('C-') || code == 'C10' || code == 'SEC-C10') &&
+            householdAssetsWidget != null) {
+          handledTitles.add(title);
+          sectionSlivers.add(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: householdAssetsWidget!,
             ),
           );
           continue;

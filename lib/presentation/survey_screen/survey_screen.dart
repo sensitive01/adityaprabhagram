@@ -11,6 +11,7 @@ import '../../services/connectivity_service.dart';
 import '../../theme/app_theme.dart';
 import './widgets/respondent_details_section_widget.dart';
 import './widgets/household_profile_section_widget.dart';
+import './widgets/household_assets_section_widget.dart';
 import './widgets/pest_disease_section_widget.dart';
 import './widgets/employment_seasonality_section_widget.dart';
 import './widgets/asset_matrix_section_widget.dart';
@@ -342,6 +343,9 @@ class _SurveyScreenState extends State<SurveyScreen> {
   /// as a single structured matrix screen.
   bool _isAssetMatrixMode = false;
 
+  /// Sub-page index for Section C (0: Land, 1: Water, 2: Assets, 3: Livestock).
+  int _cSectionPageIndex = 0;
+
   /// True when the questionnaire is showing C-10 (Livestock / Enterprises owned)
   /// as a single structured screen, immediately after the Asset Matrix.
   bool _isLivestockSectionMode = false;
@@ -413,6 +417,10 @@ class _SurveyScreenState extends State<SurveyScreen> {
   /// GlobalKey for Section B (Household Profile) widget so we can call saveData() / validateAndSave().
   final GlobalKey<HouseholdProfileSectionWidgetState> _householdProfileKey =
       GlobalKey<HouseholdProfileSectionWidgetState>();
+
+  /// GlobalKey for Section C (Household Assets / Land / Livestock) widget.
+  final GlobalKey<HouseholdAssetsSectionWidgetState> _householdAssetsKey =
+      GlobalKey<HouseholdAssetsSectionWidgetState>();
 
   /// Tracks the survey UUID for the current session.
   /// Initialised from widget.surveyId; updated after a new draft is created.
@@ -872,6 +880,60 @@ class _SurveyScreenState extends State<SurveyScreen> {
     final bId = _bSectionId;
     if (bId == null) return false;
     return _currentSectionId == bId;
+  }
+
+  /// Returns true when Section C exists in the active sections.
+  bool get _hasCSection => _orderedSections.any((s) {
+    final c = (s['code'] as String? ?? '').toUpperCase();
+    return c == 'C' || c == 'SEC-C' || c.startsWith('C-') || c == 'C10' || c == 'SEC-C10';
+  });
+
+  /// The section_id of Section C, or null if not found.
+  String? get _cSectionId {
+    for (final s in _orderedSections) {
+      final c = (s['code'] as String? ?? '').toUpperCase();
+      if (c == 'C' || c == 'SEC-C' || c.startsWith('C-') || c == 'C10' || c == 'SEC-C10') {
+        return s['id'] as String?;
+      }
+    }
+    return null;
+  }
+
+  /// The display_order of Section C, or -1 if not found.
+  int get _cSectionDisplayOrder {
+    for (final s in _orderedSections) {
+      final c = (s['code'] as String? ?? '').toUpperCase();
+      if (c == 'C' || c == 'SEC-C' || c.startsWith('C-') || c == 'C10' || c == 'SEC-C10') {
+        return (s['displayOrder'] as int? ?? -1);
+      }
+    }
+    return -1;
+  }
+
+  /// Section immediately after Section C (by display_order).
+  String? get _sectionAfterC {
+    final cOrder = _cSectionDisplayOrder;
+    if (cOrder < 0) return null;
+    Map<String, dynamic>? best;
+    for (final s in _orderedSections) {
+      final order = s['displayOrder'] as int? ?? 0;
+      if (order > cOrder) {
+        if (best == null || order < (best['displayOrder'] as int? ?? 999)) {
+          best = s;
+        }
+      }
+    }
+    return best?['id'] as String?;
+  }
+
+  /// True when the questionnaire is showing Section C (Household Assets / Land / Livestock)
+  /// as a consolidated 4-page structured experience.
+  bool get _isCSectionMode {
+    if (_isReviewMode) return false;
+    if (_questions.isEmpty) return false;
+    final cId = _cSectionId;
+    if (cId == null) return false;
+    return _currentSectionId == cId;
   }
 
   // ── Section O (Government Schemes) helpers ────────────────────────────────
@@ -1577,6 +1639,22 @@ class _SurveyScreenState extends State<SurveyScreen> {
           }, orElse: () => {'title': 'B: Household Profile'})['title']
           as String);
     }
+    if (_isCSectionMode) {
+      const subTitles = [
+        'C: Land Details (C1 – C10)',
+        'C: Water & Irrigation (C11 – C13)',
+        'C: Tools & Household Assets (C14)',
+        'C: Livestock & Enterprises (C15)',
+      ];
+      final subTitle = _cSectionPageIndex < subTitles.length
+          ? subTitles[_cSectionPageIndex]
+          : 'C: Land, Water, Assets & Livestock';
+      return (_orderedSections.firstWhere((s) {
+            final c = (s['code'] as String? ?? '').toUpperCase();
+            return c == 'C' || c == 'SEC-C' || c.startsWith('C-');
+          }, orElse: () => {'title': subTitle})['title']
+          as String);
+    }
     if (_isAssetMatrixMode) {
       return (_orderedSections.firstWhere((s) {
             final c = s['code'] as String;
@@ -1799,6 +1877,9 @@ class _SurveyScreenState extends State<SurveyScreen> {
     }
     if (_isZSectionMode) {
       return true; // Z enumerator observation: all fields optional to proceed
+    }
+    if (_isCSectionMode) {
+      return true; // Section C: validated via its own validation per page
     }
     if (_isAssetMatrixMode) {
       return true; // Asset Matrix: all fields optional to proceed
@@ -2741,15 +2822,59 @@ class _SurveyScreenState extends State<SurveyScreen> {
           return;
         }
       }
-      // If Section C (Asset Matrix) exists
-      if (_hasAssetMatrixSection) {
-        setState(() {
-          _isAssetMatrixMode = true;
-        });
-        return;
+      // If Section C exists
+      final cId = _cSectionId;
+      if (cId != null) {
+        final firstIdx = _questions.indexWhere((q) => q.sectionId == cId);
+        if (firstIdx >= 0) {
+          setState(() {
+            _cSectionPageIndex = 0;
+            _currentQuestionIndex = firstIdx;
+          });
+          return;
+        }
       }
       final nextIdx = _questions.indexWhere(
           (q) => q.sectionId != _bSectionId && q.sectionId != _aSectionId);
+      if (nextIdx >= 0) {
+        setState(() {
+          _currentQuestionIndex = nextIdx;
+        });
+        return;
+      }
+      setState(() {
+        _isReviewMode = true;
+      });
+      return;
+    }
+
+    // ── Section C (Land, Water, Assets, Livestock) mode ───────────
+    if (_isCSectionMode) {
+      final state = _householdAssetsKey.currentState;
+      if (state != null) {
+        if (!state.validateCurrentPage()) return;
+        if (_cSectionPageIndex < 3) {
+          setState(() {
+            _cSectionPageIndex++;
+            state.goToPage(_cSectionPageIndex);
+          });
+          return;
+        }
+        state.saveData();
+      }
+      _cSectionPageIndex = 0;
+      final afterCId = _sectionAfterC ?? _sectionAfterAssetMatrix;
+      if (afterCId != null) {
+        final firstIdx = _questions.indexWhere((q) => q.sectionId == afterCId);
+        if (firstIdx >= 0) {
+          setState(() {
+            _currentQuestionIndex = firstIdx;
+          });
+          return;
+        }
+      }
+      final nextIdx = _questions.indexWhere(
+          (q) => q.sectionId != _cSectionId && q.sectionId != _bSectionId && q.sectionId != _aSectionId);
       if (nextIdx >= 0) {
         setState(() {
           _currentQuestionIndex = nextIdx;
@@ -3786,6 +3911,34 @@ class _SurveyScreenState extends State<SurveyScreen> {
       return;
     }
 
+    // ── In Section C (Land, Water, Assets, Livestock) mode ───────
+    if (_isCSectionMode) {
+      final state = _householdAssetsKey.currentState;
+      if (_cSectionPageIndex > 0) {
+        setState(() {
+          _cSectionPageIndex--;
+          state?.goToPage(_cSectionPageIndex);
+        });
+        return;
+      }
+      // On page 0: go back to Section B!
+      _householdAssetsKey.currentState?.saveData();
+      final bId = _bSectionId;
+      if (bId != null) {
+        final bIdx = _questions.indexWhere((q) => q.sectionId == bId);
+        if (bIdx >= 0) {
+          setState(() {
+            _currentQuestionIndex = bIdx;
+          });
+          return;
+        }
+      }
+      setState(() {
+        _currentQuestionIndex = 0;
+      });
+      return;
+    }
+
     // ── In Asset Matrix mode: go back to last C question ──────────────────
     if (_isAssetMatrixMode) {
       final cSec = _orderedSections.firstWhere((s) {
@@ -4576,8 +4729,27 @@ class _SurveyScreenState extends State<SurveyScreen> {
       }
     }
 
-    // ── At first question of section after C: go back into Asset Matrix mode ──
-    if (_hasAssetMatrixSection) {
+    // ── At first question of section after C: go back into Section C mode ──
+    if (_hasCSection) {
+      final afterCId = _sectionAfterC ?? _sectionAfterAssetMatrix;
+      if (afterCId != null) {
+        final currentSecId = _questions[_currentQuestionIndex].sectionId;
+        if (currentSecId == afterCId) {
+          final firstVisibleInAfterC = _questions.indexWhere(
+            (q) => q.sectionId == afterCId && _isQuestionVisible(q),
+          );
+          if (firstVisibleInAfterC == _currentQuestionIndex) {
+            final cId = _cSectionId;
+            final cIdx = cId != null ? _questions.indexWhere((q) => q.sectionId == cId) : -1;
+            setState(() {
+              _cSectionPageIndex = 3;
+              if (cIdx >= 0) _currentQuestionIndex = cIdx;
+            });
+            return;
+          }
+        }
+      }
+    } else if (_hasAssetMatrixSection) {
       final afterCId = _sectionAfterAssetMatrix;
       if (afterCId != null) {
         final currentSecId = _questions[_currentQuestionIndex].sectionId;
@@ -5004,6 +5176,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
       if (_currentSurveyId != null && _currentSurveyId!.isNotEmpty) {
         _mirrorDraftToLocalDb(uid: uid, status: 'draft');
         _respondentDetailsKey.currentState?.saveData();
+        _householdProfileKey.currentState?.saveData();
+        _householdAssetsKey.currentState?.saveData();
         _lSectionKey.currentState?.saveData();
         _assetMatrixKey.currentState?.saveData();
         _livestockSectionKey.currentState?.saveData();
@@ -5026,6 +5200,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
           }
           await _mirrorDraftToLocalDb(uid: uid, status: 'draft');
           _respondentDetailsKey.currentState?.saveData();
+          _householdProfileKey.currentState?.saveData();
+          _householdAssetsKey.currentState?.saveData();
           _lSectionKey.currentState?.saveData();
           _assetMatrixKey.currentState?.saveData();
           _livestockSectionKey.currentState?.saveData();
@@ -5077,6 +5253,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
       await _mirrorDraftToLocalDb(uid: uid, status: status);
       _respondentDetailsKey.currentState?.saveData();
+      _householdProfileKey.currentState?.saveData();
+      _householdAssetsKey.currentState?.saveData();
       await _assetMatrixKey.currentState?.saveData();
       if (mounted) setState(() => _isSavingDraft = false);
       Fluttertoast.showToast(
@@ -5378,6 +5556,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                         _isXSectionMode ||
                         _isYSectionMode ||
                         _isZSectionMode ||
+                        _isCSectionMode ||
                         _isAssetMatrixMode ||
                         _isLivestockSectionMode)
                     ? _logicalDisplayIndex - 1
@@ -5385,6 +5564,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                 totalInSection:
                     (_isASectionMode ||
                         _isBSectionMode ||
+                        _isCSectionMode ||
                         _isPestSectionMode ||
                         _isFSectionMode ||
                         _isKSectionMode ||
@@ -5423,6 +5603,14 @@ class _SurveyScreenState extends State<SurveyScreen> {
                               initialAnswers: _answers,
                               isReadOnly: true,
                               onSave: (_) {},
+                            )
+                          : null,
+                      householdAssetsWidget: _hasAssetMatrixSection
+                          ? HouseholdAssetsSectionWidget(
+                              householdId: widget.householdId,
+                              surveyId: _currentSurveyId,
+                              initialAnswers: _answers,
+                              isReadOnly: true,
                             )
                           : null,
                       pestWidget: _currentSurveyId != null
@@ -5768,6 +5956,26 @@ class _SurveyScreenState extends State<SurveyScreen> {
                         isReadOnly: _isReadOnly,
                       ),
                     )
+                  : _isCSectionMode
+                  ? SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isTablet ? 40 : 16,
+                        vertical: 16,
+                      ),
+                      child: HouseholdAssetsSectionWidget(
+                        key: _householdAssetsKey,
+                        householdId: widget.householdId,
+                        surveyId: _currentSurveyId,
+                        initialAnswers: _answers,
+                        isReadOnly: _isReadOnly,
+                        initialPage: _cSectionPageIndex,
+                        onDataChanged: (updated) {
+                          setState(() {
+                            _answers.addAll(updated);
+                          });
+                        },
+                      ),
+                    )
                   : _isAssetMatrixMode
                   ? SingleChildScrollView(
                       padding: EdgeInsets.symmetric(
@@ -5924,6 +6132,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                     _isXSectionMode ||
                     _isYSectionMode ||
                     _isZSectionMode ||
+                    _isCSectionMode ||
                     _isAssetMatrixMode ||
                     _isLivestockSectionMode ||
                     _isCroppingPatternMode,
@@ -5943,6 +6152,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
                         _isXSectionMode ||
                         _isYSectionMode ||
                         _isZSectionMode ||
+                        _isCSectionMode ||
                         _isAssetMatrixMode ||
                         _isLivestockSectionMode ||
                         _isCroppingPatternMode
@@ -5951,6 +6161,16 @@ class _SurveyScreenState extends State<SurveyScreen> {
                 onNext: _isReviewMode ? null : _goNext,
                 onReview: () {
                   if (_isReviewMode) return null;
+                  // In Section C mode, show Review only if no section after C
+                  if (_isCSectionMode) {
+                    final afterCId = _sectionAfterAssetMatrix;
+                    if (afterCId == null) {
+                      return () => setState(() {
+                        _isReviewMode = true;
+                      });
+                    }
+                    return null;
+                  }
                   // In Asset Matrix mode, show Review only if no section after C
                   if (_isAssetMatrixMode) {
                     final afterCId = _sectionAfterAssetMatrix;
