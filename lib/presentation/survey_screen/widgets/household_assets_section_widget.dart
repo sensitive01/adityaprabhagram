@@ -582,8 +582,12 @@ class HouseholdAssetsSectionWidgetState
       'C2_total_land_owned': double.tryParse(_totalLandOwnedCtrl.text.trim()),
       'C3_cultivated_land': double.tryParse(_cultivatedLandCtrl.text.trim()),
       'C4_fallow_land': double.tryParse(_fallowLandCtrl.text.trim()),
-      'C5_fallow_reasons': _selectedFallowReasons.toList(),
-      'C5_fallow_other': _fallowReasonOtherCtrl.text.trim(),
+      'C5_fallow_reasons': ((double.tryParse(_fallowLandCtrl.text.trim()) ?? 0) > 0)
+          ? _selectedFallowReasons.toList()
+          : <String>[],
+      'C5_fallow_other': ((double.tryParse(_fallowLandCtrl.text.trim()) ?? 0) > 0)
+          ? _fallowReasonOtherCtrl.text.trim()
+          : '',
       'C6_leased_out_area': double.tryParse(_leasedOutAreaCtrl.text.trim()),
       'C6_leased_out_receipt': double.tryParse(_leasedOutReceiptCtrl.text.trim()),
       'C6_tenure_origin': {
@@ -889,56 +893,70 @@ class HouseholdAssetsSectionWidgetState
                   readOnly: widget.isReadOnly,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: _inputDecoration(theme, 'e.g. 0.5 (or 0 if none)'),
-                  onChanged: (_) => setState(() {}),
+                  onChanged: (val) {
+                    final acres = double.tryParse(val.trim()) ?? 0;
+                    if (acres <= 0) {
+                      _selectedFallowReasons.clear();
+                      _fallowReasonOtherCtrl.clear();
+                    }
+                    setState(() {});
+                  },
                 ),
-                const SizedBox(height: 14),
-
-                _label('C5. Reason for fallow / uncultivated land (Select all that apply)', theme),
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _kFallowReasons.map((reason) {
-                    final sel = _selectedFallowReasons.contains(reason);
-                    return FilterChip(
-                      label: Text(
-                        reason,
-                        style: GoogleFonts.manrope(
-                          fontSize: 13,
-                          fontWeight: sel ? FontWeight.w700 : FontWeight.w600,
-                          color: sel ? const Color(0xFF1B4332) : const Color(0xFF1E293B),
+                if ((double.tryParse(_fallowLandCtrl.text.trim()) ?? 0) > 0) ...[
+                  const SizedBox(height: 14),
+                  _label('C5. Reason for fallow / uncultivated land (Select all that apply)', theme),
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _kFallowReasons.map((reason) {
+                      final sel = _selectedFallowReasons.contains(reason);
+                      return FilterChip(
+                        label: Text(
+                          reason,
+                          style: GoogleFonts.manrope(
+                            fontSize: 12,
+                            fontWeight: sel ? FontWeight.w700 : FontWeight.w600,
+                            color: sel ? Colors.white : const Color(0xFF1E293B),
+                          ),
                         ),
-                      ),
-                      selected: sel,
-                      selectedColor: const Color(0xFFD8F3DC),
-                      backgroundColor: Colors.white,
-                      checkmarkColor: const Color(0xFF1B4332),
-                      side: BorderSide(
-                        color: sel ? const Color(0xFF2D6A4F) : Colors.grey.shade300,
-                        width: sel ? 1.5 : 1.0,
-                      ),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      onSelected: widget.isReadOnly
-                          ? null
-                          : (val) {
-                              setState(() {
-                                if (val) {
-                                  _selectedFallowReasons.add(reason);
-                                } else {
-                                  _selectedFallowReasons.remove(reason);
-                                }
-                              });
-                            },
-                    );
-                  }).toList(),
-                ),
-                if (_selectedFallowReasons.contains('Others (specify)')) ...[
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _fallowReasonOtherCtrl,
-                    readOnly: widget.isReadOnly,
-                    decoration: _inputDecoration(theme, 'Specify reason for fallow land'),
+                        labelStyle: GoogleFonts.manrope(
+                          fontSize: 12,
+                          fontWeight: sel ? FontWeight.w700 : FontWeight.w600,
+                          color: sel ? Colors.white : const Color(0xFF1E293B),
+                        ),
+                        selected: sel,
+                        selectedColor: AppTheme.primary,
+                        backgroundColor: const Color(0xFFF1F5F9),
+                        checkmarkColor: Colors.white,
+                        side: BorderSide(
+                          color: sel ? AppTheme.primary : const Color(0xFFCBD5E1),
+                          width: sel ? 1.5 : 1.0,
+                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        onSelected: widget.isReadOnly
+                            ? null
+                            : (val) {
+                                setState(() {
+                                  if (val) {
+                                    _selectedFallowReasons.add(reason);
+                                  } else {
+                                    _selectedFallowReasons.remove(reason);
+                                  }
+                                });
+                              },
+                      );
+                    }).toList(),
                   ),
+                  if (_selectedFallowReasons.contains('Others (specify)')) ...[
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _fallowReasonOtherCtrl,
+                      readOnly: widget.isReadOnly,
+                      decoration: _inputDecoration(theme, 'Specify reason for fallow land'),
+                    ),
+                  ],
                 ],
               ],
             ),
@@ -1376,7 +1394,7 @@ class HouseholdAssetsSectionWidgetState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Select availability status for each tool/asset. For owned items specify quantity owned. For rented items, specify hiring details.',
+                'Which of the following agricultural tools, machinery and household assets are available with your household?',
                 style: GoogleFonts.manrope(fontSize: 13, color: Colors.grey.shade700),
               ),
               const SizedBox(height: 16),
@@ -1692,7 +1710,7 @@ class HouseholdAssetsSectionWidgetState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Select which livestock or allied enterprises are practised by the household. For practised items, complete species counts, purpose, and annual production details.',
+                'Which of the following livestock and allied enterprises are practised by your household?',
                 style: GoogleFonts.manrope(fontSize: 13, color: Colors.grey.shade700),
               ),
               const SizedBox(height: 16),

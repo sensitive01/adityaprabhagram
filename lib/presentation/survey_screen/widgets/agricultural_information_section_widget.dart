@@ -22,7 +22,7 @@ const Color _neutralDark = Color(0xFF1E293B);
 // ─────────────────────────────────────────────────────────────────────────────
 const List<String> _kD2FarmingPractices = [
   'Mono-cropping',
-  'Mixed cropping',
+  'Mixed farming-subsistence  ',
   'Intercropping',
   'Terrace cultivation',
   'Shifting cultivation',
@@ -35,7 +35,7 @@ const List<String> _kD2FarmingPractices = [
   'Agroforestry-based',
   'NTFP-MAP-based',
   'Mixed livelihood system',
-  'Other',
+  'Other (specify)',
 ];
 
 const List<String> _kD3DominantFarmingSystems = [
@@ -1555,7 +1555,7 @@ class AgriculturalInformationSectionWidgetState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _label('Household Consumed (${crop.yieldUnit})', theme),
+                    _label('Quantity Consumed (${crop.yieldUnit})', theme),
                     TextFormField(
                       initialValue: crop.quantityConsumed?.toString(),
                       readOnly: widget.isReadOnly,
@@ -1644,7 +1644,7 @@ class AgriculturalInformationSectionWidgetState
                   );
                 }).toList(),
               ),
-              if (crop.purposes.contains('Other')) ...[
+              if (crop.purposes.contains('Other (specify)')) ...[
                 const SizedBox(height: 8),
                 TextFormField(
                   initialValue: crop.purposeOther,

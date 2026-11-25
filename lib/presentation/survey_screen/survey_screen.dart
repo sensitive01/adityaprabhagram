@@ -2255,7 +2255,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
             'Son/Daughter',
             'Parent',
             'Sibling',
-            'Other',
+            'Other (Specify)',
           ],
         ),
         SurveyQuestion(

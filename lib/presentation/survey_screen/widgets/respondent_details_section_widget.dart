@@ -833,8 +833,11 @@ class RespondentDetailsSectionWidgetState
                     _label('LGD Code', theme),
                     TextFormField(
                       controller: _lgdCodeController,
-                      readOnly: widget.isReadOnly,
-                      decoration: _inputDecoration(theme, 'LGD Code'),
+                      readOnly: true,
+                      decoration: _inputDecoration(theme, 'LGD Code (Auto-populated)').copyWith(
+                        fillColor: theme.colorScheme.onSurface.withAlpha(12),
+                        suffixIcon: const Icon(Icons.lock_outline, size: 16, color: Colors.grey),
+                      ),
                       onChanged: (_) => _notifyParent(),
                     ),
                   ],
