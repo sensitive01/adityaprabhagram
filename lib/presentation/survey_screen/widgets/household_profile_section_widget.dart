@@ -1919,14 +1919,20 @@ class _MemberFormDialogState extends State<_MemberFormDialog> {
     required bool selected,
     required ValueChanged<bool> onSelected,
   }) {
+    final textColor = selected ? Colors.white : const Color(0xFF1E293B);
     return FilterChip(
       label: Text(
         label,
         style: GoogleFonts.manrope(
           fontSize: 12,
           fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-          color: selected ? Colors.white : const Color(0xFF1E293B),
+          color: textColor,
         ),
+      ),
+      labelStyle: GoogleFonts.manrope(
+        fontSize: 12,
+        fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+        color: textColor,
       ),
       selected: selected,
       onSelected: onSelected,
