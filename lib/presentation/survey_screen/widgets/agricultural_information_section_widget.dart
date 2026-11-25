@@ -260,7 +260,6 @@ class AgriculturalInformationSectionWidgetState
   // ── D1 - D9 Controllers & State ──────────────────────────────────────────
   final TextEditingController _farmingExperienceCtrl = TextEditingController();
   final Set<String> _selectedFarmingPractices = {};
-  String? _farmingPracticesOther;
   final TextEditingController _farmingPracticesOtherCtrl = TextEditingController();
 
   String? _dominantFarmingSystem;
@@ -287,8 +286,6 @@ class AgriculturalInformationSectionWidgetState
 
   // ── D11 & D12 Repeatable Crops List ──────────────────────────────────────
   final List<CropRecord> _cropRecords = [];
-
-  bool _isLoading = false;
 
   @override
   void initState() {
@@ -1387,7 +1384,7 @@ class AgriculturalInformationSectionWidgetState
                     _label('Crop Category', theme),
                     DropdownButtonFormField<String>(
                       isExpanded: true,
-                      value: _kCropCategories.contains(crop.category) ? crop.category : _kCropCategories.first,
+                      initialValue: _kCropCategories.contains(crop.category) ? crop.category : _kCropCategories.first,
                       decoration: _inputDecoration(theme, 'Select Category'),
                       items: _kCropCategories
                           .map((c) => DropdownMenuItem(
@@ -1463,7 +1460,7 @@ class AgriculturalInformationSectionWidgetState
                     _label('Variety', theme),
                     DropdownButtonFormField<String>(
                       isExpanded: true,
-                      value: _kVarieties.contains(crop.variety) ? crop.variety : _kVarieties.first,
+                      initialValue: _kVarieties.contains(crop.variety) ? crop.variety : _kVarieties.first,
                       decoration: _inputDecoration(theme, 'Select Variety'),
                       items: _kVarieties
                           .map((v) => DropdownMenuItem(
@@ -1529,7 +1526,7 @@ class AgriculturalInformationSectionWidgetState
                     _label('Unit', theme),
                     DropdownButtonFormField<String>(
                       isExpanded: true,
-                      value: _kYieldUnits.contains(crop.yieldUnit) ? crop.yieldUnit : _kYieldUnits.first,
+                      initialValue: _kYieldUnits.contains(crop.yieldUnit) ? crop.yieldUnit : _kYieldUnits.first,
                       decoration: _inputDecoration(theme, 'Unit'),
                       items: _kYieldUnits
                           .map((u) => DropdownMenuItem(

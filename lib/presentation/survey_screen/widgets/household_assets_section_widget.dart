@@ -777,7 +777,6 @@ class HouseholdAssetsSectionWidgetState
   // PAGE 1: Land Details (C1 – C10)
   // ─────────────────────────────────────────────────────────────────────────
   Widget _buildLandPage(ThemeData theme) {
-    final fallowAcres = double.tryParse(_fallowLandCtrl.text.trim()) ?? 0.0;
     final ownedAcres = double.tryParse(_totalLandOwnedCtrl.text.trim()) ?? 0.0;
     final leasedInAcres = double.tryParse(_leasedInAreaCtrl.text.trim()) ?? 0.0;
     final leasedOutAcres = double.tryParse(_leasedOutAreaCtrl.text.trim()) ?? 0.0;

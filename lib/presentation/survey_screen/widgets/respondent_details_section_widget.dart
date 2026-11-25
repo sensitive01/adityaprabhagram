@@ -69,6 +69,15 @@ class RespondentDetailsSectionWidgetState
   late TextEditingController _psPoController;
   late TextEditingController _lgdCodeController;
 
+  // LGD API Dynamic state
+  List<String> _states = [];
+  List<String> _districts = [];
+  List<String> _blocks = [];
+  List<VillageRecord> _villages = [];
+  bool _isLoadingDistricts = false;
+  bool _isLoadingBlocks = false;
+  bool _isLoadingVillages = false;
+
   // A6: Mobile Number
   late TextEditingController _mobileController;
 
@@ -165,26 +174,61 @@ class RespondentDetailsSectionWidgetState
     _enumeratorController = TextEditingController(
       text: ans['A10_enumerator_name'] as String? ?? widget.currentAgentName,
     );
+
+    // Initial LGD API load
+    _loadLocationData();
+  }
+
+  void _loadLocationData() async {
+    final states = await LocationMasterData.fetchStates();
+    if (!mounted) return;
+    setState(() {
+      _states = states;
+    });
+
+    if (_selectedState != null) {
+      final dists = await LocationMasterData.fetchDistricts(_selectedState!);
+      if (!mounted) return;
+      setState(() {
+        _districts = dists;
+      });
+
+      if (_selectedDistrict != null) {
+        final blks = await LocationMasterData.fetchCitiesOrBlocks(_selectedState!, _selectedDistrict!);
+        if (!mounted) return;
+        setState(() {
+          _blocks = blks;
+        });
+
+        if (_selectedBlock != null) {
+          final vills = await LocationMasterData.fetchVillages(_selectedState!, _selectedDistrict!, _selectedBlock!);
+          if (!mounted) return;
+          setState(() {
+            _villages = vills;
+          });
+          _autoPopulateVillageMetadata(_selectedVillage);
+        }
+      }
+    }
   }
 
   void _autoPopulateVillageMetadata(String? villageName) {
     if (villageName == null || villageName == 'Other / Not Listed') {
       return;
     }
-    if (_selectedState != null &&
-        _selectedDistrict != null &&
-        _selectedBlock != null) {
-      final record = LocationMasterData.findVillage(
-        _selectedState!,
-        _selectedDistrict!,
-        _selectedBlock!,
+    final record = _villages.firstWhere(
+      (v) => v.villageName.toLowerCase() == villageName.toLowerCase(),
+      orElse: () => LocationMasterData.findVillage(
+        _selectedState ?? '',
+        _selectedDistrict ?? '',
+        _selectedBlock ?? '',
         villageName,
-      );
-      if (record != null) {
-        _gramPanchayatController.text = record.gramPanchayat;
-        _psPoController.text = record.policeStationPostOffice;
-        _lgdCodeController.text = record.lgdCode;
-      }
+      ) ?? const VillageRecord(villageName: '', lgdCode: '', gramPanchayat: '', policeStationPostOffice: ''),
+    );
+    if (record.lgdCode.isNotEmpty) {
+      _gramPanchayatController.text = record.gramPanchayat;
+      _psPoController.text = record.policeStationPostOffice;
+      _lgdCodeController.text = record.lgdCode;
     }
   }
 
@@ -448,10 +492,14 @@ class RespondentDetailsSectionWidgetState
           ),
           const SizedBox(height: 6),
           DropdownButtonFormField<String>(
+            isExpanded: true,
             initialValue: _salutation,
             decoration: _inputDecoration(theme, 'Select Salutation'),
             items: _salutations.map((s) {
-              return DropdownMenuItem(value: s, child: Text(s));
+              return DropdownMenuItem(
+                value: s,
+                child: Text(s, overflow: TextOverflow.ellipsis),
+              );
             }).toList(),
             onChanged: widget.isReadOnly
                 ? null
@@ -512,10 +560,14 @@ class RespondentDetailsSectionWidgetState
           ),
           const SizedBox(height: 6),
           DropdownButtonFormField<String>(
+            isExpanded: true,
             initialValue: _relationshipToHead,
             decoration: _inputDecoration(theme, 'Select Relationship'),
             items: _relationships.map((r) {
-              return DropdownMenuItem(value: r, child: Text(r));
+              return DropdownMenuItem(
+                value: r,
+                child: Text(r, overflow: TextOverflow.ellipsis),
+              );
             }).toList(),
             onChanged: widget.isReadOnly
                 ? null
@@ -539,22 +591,20 @@ class RespondentDetailsSectionWidgetState
   }
 
   Widget _buildLocationCard(ThemeData theme) {
-    final states = LocationMasterData.getStates();
-    final districts = _selectedState != null
-        ? LocationMasterData.getDistricts(_selectedState!)
-        : <String>[];
-    final blocks = (_selectedState != null && _selectedDistrict != null)
-        ? LocationMasterData.getBlocks(_selectedState!, _selectedDistrict!)
-        : <String>[];
-    final villages = (_selectedState != null &&
-            _selectedDistrict != null &&
-            _selectedBlock != null)
-        ? LocationMasterData.getVillages(
-            _selectedState!,
-            _selectedDistrict!,
-            _selectedBlock!,
-          )
-        : <VillageRecord>[];
+    final states = _states.isNotEmpty ? _states : LocationMasterData.getStates();
+    final districts = _districts.isNotEmpty
+        ? _districts
+        : (_selectedState != null ? LocationMasterData.getDistricts(_selectedState!) : <String>[]);
+    final blocks = _blocks.isNotEmpty
+        ? _blocks
+        : (_selectedState != null && _selectedDistrict != null
+            ? LocationMasterData.getBlocks(_selectedState!, _selectedDistrict!)
+            : <String>[]);
+    final villages = _villages.isNotEmpty
+        ? _villages
+        : (_selectedState != null && _selectedDistrict != null && _selectedBlock != null
+            ? LocationMasterData.getVillages(_selectedState!, _selectedDistrict!, _selectedBlock!)
+            : <VillageRecord>[]);
 
     return _cardContainer(
       theme: theme,
@@ -563,7 +613,7 @@ class RespondentDetailsSectionWidgetState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Cascading selection auto-populates LGD codes and administrative units based on State -> District -> City / Block -> Village.',
+            'Cascading dynamic dropdowns powered by India LGD Index API (State -> District -> City / Block -> Village).',
             style: GoogleFonts.manrope(fontSize: 11, color: theme.colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 14),
@@ -571,24 +621,43 @@ class RespondentDetailsSectionWidgetState
           // State
           _label('State *', theme),
           DropdownButtonFormField<String>(
+            isExpanded: true,
             key: ValueKey('state_$_selectedState'),
-            value: states.contains(_selectedState) ? _selectedState : null,
+            initialValue: states.contains(_selectedState) ? _selectedState : null,
             decoration: _inputDecoration(theme, 'Select State'),
-            items: states.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+            items: states
+                .map((s) => DropdownMenuItem(
+                      value: s,
+                      child: Text(s, overflow: TextOverflow.ellipsis),
+                    ))
+                .toList(),
             onChanged: widget.isReadOnly
                 ? null
-                : (val) {
+                : (val) async {
                     setState(() {
                       _selectedState = val;
                       _selectedDistrict = null;
                       _selectedBlock = null;
                       _selectedVillage = null;
+                      _districts = [];
+                      _blocks = [];
+                      _villages = [];
+                      _isLoadingDistricts = true;
                       _isOtherVillage = false;
                       _gramPanchayatController.clear();
                       _psPoController.clear();
                       _lgdCodeController.clear();
                     });
                     _notifyParent();
+                    if (val != null) {
+                      final dists = await LocationMasterData.fetchDistricts(val);
+                      if (mounted && _selectedState == val) {
+                        setState(() {
+                          _districts = dists;
+                          _isLoadingDistricts = false;
+                        });
+                      }
+                    }
                   },
           ),
           const SizedBox(height: 12),
@@ -596,23 +665,44 @@ class RespondentDetailsSectionWidgetState
           // District
           _label('District *', theme),
           DropdownButtonFormField<String>(
+            isExpanded: true,
             key: ValueKey('district_${_selectedState}_$_selectedDistrict'),
-            value: districts.contains(_selectedDistrict) ? _selectedDistrict : null,
-            decoration: _inputDecoration(theme, 'Select District'),
-            items: districts.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
+            initialValue: districts.contains(_selectedDistrict) ? _selectedDistrict : null,
+            decoration: _inputDecoration(
+              theme,
+              _isLoadingDistricts ? 'Loading districts from LGD API...' : 'Select District',
+            ),
+            items: districts
+                .map((d) => DropdownMenuItem(
+                      value: d,
+                      child: Text(d, overflow: TextOverflow.ellipsis),
+                    ))
+                .toList(),
             onChanged: widget.isReadOnly
                 ? null
-                : (val) {
+                : (val) async {
                     setState(() {
                       _selectedDistrict = val;
                       _selectedBlock = null;
                       _selectedVillage = null;
+                      _blocks = [];
+                      _villages = [];
+                      _isLoadingBlocks = true;
                       _isOtherVillage = false;
                       _gramPanchayatController.clear();
                       _psPoController.clear();
                       _lgdCodeController.clear();
                     });
                     _notifyParent();
+                    if (_selectedState != null && val != null) {
+                      final blks = await LocationMasterData.fetchCitiesOrBlocks(_selectedState!, val);
+                      if (mounted && _selectedDistrict == val) {
+                        setState(() {
+                          _blocks = blks;
+                          _isLoadingBlocks = false;
+                        });
+                      }
+                    }
                   },
           ),
           const SizedBox(height: 12),
@@ -620,22 +710,42 @@ class RespondentDetailsSectionWidgetState
           // City / Block
           _label('City / Block *', theme),
           DropdownButtonFormField<String>(
+            isExpanded: true,
             key: ValueKey('block_${_selectedDistrict}_$_selectedBlock'),
-            value: blocks.contains(_selectedBlock) ? _selectedBlock : null,
-            decoration: _inputDecoration(theme, 'Select City / Block'),
-            items: blocks.map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(),
+            initialValue: blocks.contains(_selectedBlock) ? _selectedBlock : null,
+            decoration: _inputDecoration(
+              theme,
+              _isLoadingBlocks ? 'Loading cities/blocks from LGD API...' : 'Select City / Block',
+            ),
+            items: blocks
+                .map((b) => DropdownMenuItem(
+                      value: b,
+                      child: Text(b, overflow: TextOverflow.ellipsis),
+                    ))
+                .toList(),
             onChanged: widget.isReadOnly
                 ? null
-                : (val) {
+                : (val) async {
                     setState(() {
                       _selectedBlock = val;
                       _selectedVillage = null;
+                      _villages = [];
+                      _isLoadingVillages = true;
                       _isOtherVillage = false;
                       _gramPanchayatController.clear();
                       _psPoController.clear();
                       _lgdCodeController.clear();
                     });
                     _notifyParent();
+                    if (_selectedState != null && _selectedDistrict != null && val != null) {
+                      final vills = await LocationMasterData.fetchVillages(_selectedState!, _selectedDistrict!, val);
+                      if (mounted && _selectedBlock == val) {
+                        setState(() {
+                          _villages = vills;
+                          _isLoadingVillages = false;
+                        });
+                      }
+                    }
                   },
           ),
           const SizedBox(height: 12),
@@ -643,21 +753,25 @@ class RespondentDetailsSectionWidgetState
           // Village
           _label('Village *', theme),
           DropdownButtonFormField<String>(
+            isExpanded: true,
             key: ValueKey('village_${_selectedBlock}_$_selectedVillage'),
-            value: _isOtherVillage
+            initialValue: _isOtherVillage
                 ? 'Other / Not Listed'
                 : (villages.any((v) => v.villageName == _selectedVillage)
                     ? _selectedVillage
                     : null),
-            decoration: _inputDecoration(theme, 'Select Village from Master'),
+            decoration: _inputDecoration(
+              theme,
+              _isLoadingVillages ? 'Loading villages from LGD API...' : 'Select Village from Master',
+            ),
             items: [
               ...villages.map((v) => DropdownMenuItem(
                     value: v.villageName,
-                    child: Text(v.villageName),
+                    child: Text(v.villageName, overflow: TextOverflow.ellipsis),
                   )),
               const DropdownMenuItem(
                 value: 'Other / Not Listed',
-                child: Text('Other / Not Listed (Manual entry)'),
+                child: Text('Other / Not Listed (Manual entry)', overflow: TextOverflow.ellipsis),
               ),
             ],
             onChanged: widget.isReadOnly
@@ -887,9 +1001,15 @@ class RespondentDetailsSectionWidgetState
           // A9: Preferred Interview Language
           _label('A9. Preferred Interview Language *', theme),
           DropdownButtonFormField<String>(
+            isExpanded: true,
             initialValue: _preferredLanguage,
             decoration: _inputDecoration(theme, 'Select Language'),
-            items: _languages.map((l) => DropdownMenuItem(value: l, child: Text(l))).toList(),
+            items: _languages
+                .map((l) => DropdownMenuItem(
+                      value: l,
+                      child: Text(l, overflow: TextOverflow.ellipsis),
+                    ))
+                .toList(),
             onChanged: widget.isReadOnly
                 ? null
                 : (val) {

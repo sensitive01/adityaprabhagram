@@ -687,16 +687,19 @@ class HouseholdProfileSectionWidgetState
             child: Row(
               children: [
                 const Icon(Icons.people_alt_outlined, color: AppTheme.primary, size: 20),
-                const SizedBox(width: 10),
-                Text(
-                  'Total Family Size: $total members',
-                  style: GoogleFonts.manrope(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.primary,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Total Family Size: $total members',
+                    style: GoogleFonts.manrope(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 8),
                 Text(
                   '${_members.length} records added',
                   style: GoogleFonts.manrope(
@@ -815,13 +818,16 @@ class HouseholdProfileSectionWidgetState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Individual records for every household member',
-                style: GoogleFonts.manrope(
-                  fontSize: 12,
-                  color: theme.colorScheme.onSurfaceVariant,
+              Expanded(
+                child: Text(
+                  'Individual records for every household member',
+                  style: GoogleFonts.manrope(
+                    fontSize: 12,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               if (!widget.isReadOnly)
                 FilledButton.icon(
                   onPressed: _addMember,
@@ -1506,8 +1512,8 @@ class _MemberFormDialogState extends State<_MemberFormDialog> {
                             runSpacing: 8,
                             children: _allDropoutReasons.map((reason) {
                               final selected = _dropoutReasons.contains(reason);
-                              return FilterChip(
-                                label: Text(reason),
+                              return _filterChip(
+                                label: reason,
                                 selected: selected,
                                 onSelected: (sel) {
                                   setState(() {
@@ -1553,8 +1559,8 @@ class _MemberFormDialogState extends State<_MemberFormDialog> {
                                 runSpacing: 8,
                                 children: _allSupportOptions.map((opt) {
                                   final sel = _supportNeeded.contains(opt);
-                                  return FilterChip(
-                                    label: Text(opt),
+                                  return _filterChip(
+                                    label: opt,
                                     selected: sel,
                                     onSelected: (val) {
                                       setState(() {
@@ -1585,9 +1591,15 @@ class _MemberFormDialogState extends State<_MemberFormDialog> {
 
                         _label('Current / Primary Occupation *', theme),
                         DropdownButtonFormField<String>(
+                          isExpanded: true,
                           initialValue: _primaryOccupation,
                           decoration: _dialogInputDecoration('Select Occupation'),
-                          items: _allOccupations.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
+                          items: _allOccupations
+                              .map((o) => DropdownMenuItem(
+                                    value: o,
+                                    child: Text(o, overflow: TextOverflow.ellipsis),
+                                  ))
+                              .toList(),
                           onChanged: (val) => setState(() => _primaryOccupation = val!),
                         ),
 
@@ -1599,8 +1611,8 @@ class _MemberFormDialogState extends State<_MemberFormDialog> {
                             runSpacing: 8,
                             children: _allFarmingActivities.map((act) {
                               final sel = _farmingActivities.contains(act);
-                              return FilterChip(
-                                label: Text(act),
+                              return _filterChip(
+                                label: act,
                                 selected: sel,
                                 onSelected: (val) {
                                   setState(() {
@@ -1624,8 +1636,8 @@ class _MemberFormDialogState extends State<_MemberFormDialog> {
                             runSpacing: 8,
                             children: _allNotWorkingReasons.map((r) {
                               final sel = _notWorkingReasons.contains(r);
-                              return FilterChip(
-                                label: Text(r),
+                              return _filterChip(
+                                label: r,
                                 selected: sel,
                                 onSelected: (val) {
                                   setState(() {
@@ -1647,9 +1659,15 @@ class _MemberFormDialogState extends State<_MemberFormDialog> {
 
                         _label('Migration Status *', theme),
                         DropdownButtonFormField<String>(
+                          isExpanded: true,
                           initialValue: _migrationStatus,
                           decoration: _dialogInputDecoration('Select Status'),
-                          items: _allMigrationStatuses.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                          items: _allMigrationStatuses
+                              .map((s) => DropdownMenuItem(
+                                    value: s,
+                                    child: Text(s, overflow: TextOverflow.ellipsis),
+                                  ))
+                              .toList(),
                           onChanged: (val) => setState(() => _migrationStatus = val!),
                         ),
 
@@ -1657,9 +1675,15 @@ class _MemberFormDialogState extends State<_MemberFormDialog> {
                           const SizedBox(height: 12),
                           _label('Place of Migration', theme),
                           DropdownButtonFormField<String>(
+                            isExpanded: true,
                             initialValue: _placeOfMigration,
                             decoration: _dialogInputDecoration('Select Place'),
-                            items: _allMigrationPlaces.map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
+                            items: _allMigrationPlaces
+                                .map((p) => DropdownMenuItem(
+                                      value: p,
+                                      child: Text(p, overflow: TextOverflow.ellipsis),
+                                    ))
+                                .toList(),
                             onChanged: (val) => setState(() => _placeOfMigration = val),
                           ),
                           const SizedBox(height: 8),
@@ -1731,8 +1755,8 @@ class _MemberFormDialogState extends State<_MemberFormDialog> {
                           runSpacing: 8,
                           children: _allSkills.map((sk) {
                             final sel = _secondarySkills.contains(sk);
-                            return FilterChip(
-                              label: Text(sk),
+                            return _filterChip(
+                              label: sk,
                               selected: sel,
                               onSelected: (val) {
                                 setState(() {
@@ -1771,8 +1795,8 @@ class _MemberFormDialogState extends State<_MemberFormDialog> {
                             runSpacing: 8,
                             children: _allSkillMonths.map((m) {
                               final sel = _skillMonths.contains(m);
-                              return FilterChip(
-                                label: Text(m),
+                              return _filterChip(
+                                label: m,
                                 selected: sel,
                                 onSelected: (val) {
                                   setState(() {
@@ -1804,8 +1828,8 @@ class _MemberFormDialogState extends State<_MemberFormDialog> {
                             runSpacing: 8,
                             children: _allCommercialSupports.map((cs) {
                               final sel = _commercialSupport.contains(cs);
-                              return FilterChip(
-                                label: Text(cs),
+                              return _filterChip(
+                                label: cs,
                                 selected: sel,
                                 onSelected: (val) {
                                   setState(() {
@@ -1890,25 +1914,69 @@ class _MemberFormDialogState extends State<_MemberFormDialog> {
     );
   }
 
-  Widget _choiceChip(String text, bool selected, VoidCallback onTap) {
+  Widget _filterChip({
+    required String label,
+    required bool selected,
+    required ValueChanged<bool> onSelected,
+  }) {
     return FilterChip(
       label: Text(
-        text,
+        label,
         style: GoogleFonts.manrope(
-          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-          color: selected ? AppTheme.primary : Colors.black87,
+          fontSize: 12,
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+          color: selected ? Colors.white : const Color(0xFF1E293B),
         ),
       ),
       selected: selected,
-      onSelected: (_) => onTap(),
-      selectedColor: AppTheme.primaryContainer,
-      backgroundColor: Colors.grey.shade100,
-      checkmarkColor: AppTheme.primary,
+      onSelected: onSelected,
+      selectedColor: AppTheme.primary,
+      backgroundColor: const Color(0xFFF1F5F9),
+      checkmarkColor: Colors.white,
       side: BorderSide(
-        color: selected ? AppTheme.primary : Colors.grey.shade300,
-        width: selected ? 1.4 : 1.0,
+        color: selected ? AppTheme.primary : const Color(0xFFCBD5E1),
+        width: selected ? 1.5 : 1.0,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    );
+  }
+
+  Widget _choiceChip(String text, bool selected, VoidCallback onTap) {
+    final isNegative = text.toLowerCase() == 'no' || text.toLowerCase() == 'not pursuing';
+    final activeColor = isNegative ? const Color(0xFF475569) : AppTheme.primary;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? activeColor : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? activeColor : const Color(0xFFCBD5E1),
+            width: selected ? 1.5 : 1.0,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: activeColor.withAlpha(50),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          text,
+          style: GoogleFonts.manrope(
+            fontSize: 13,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+            color: selected ? Colors.white : const Color(0xFF1E293B),
+          ),
+        ),
+      ),
     );
   }
 

@@ -1138,7 +1138,11 @@ class _PestDiseaseFormDialogState extends State<_PestDiseaseFormDialog> {
               .map(
                 (item) => DropdownMenuItem(
                   value: item,
-                  child: Text(item, style: GoogleFonts.manrope(fontSize: 13)),
+                  child: Text(
+                    item,
+                    style: GoogleFonts.manrope(fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               )
               .toList(),
@@ -2334,7 +2338,11 @@ class _LivestockFormDialogState extends State<_LivestockFormDialog> {
               .map(
                 (item) => DropdownMenuItem(
                   value: item,
-                  child: Text(item, style: GoogleFonts.manrope(fontSize: 13)),
+                  child: Text(
+                    item,
+                    style: GoogleFonts.manrope(fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               )
               .toList(),
