@@ -493,7 +493,10 @@ class LocalDatabaseImpl {
         )
       ''');
       await txn.execute('''
-        INSERT INTO local_cropping_pattern
+        INSERT INTO local_cropping_pattern (
+          id, survey_id, household_id, category, pattern_data_json,
+          created_at, updated_at, synced_at
+        )
           SELECT id, survey_id, household_id, category, pattern_data_json,
                  created_at, updated_at, synced_at
           FROM _local_cropping_pattern_v1

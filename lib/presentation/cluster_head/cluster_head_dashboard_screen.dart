@@ -185,34 +185,40 @@ class _ClusterHeadDashboardScreenState
   }
 
   Widget _buildTopBar() {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : 24,
+        vertical: isMobile ? 12 : 16,
+      ),
       decoration: BoxDecoration(
         color: AppTheme.surfaceLight,
         border: Border(bottom: BorderSide(color: const Color(0xFFE2E8F0))),
       ),
       child: Row(
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _clusterName.isNotEmpty ? _clusterName : 'Dashboard',
-                style: GoogleFonts.manrope(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _clusterName.isNotEmpty ? _clusterName : 'Dashboard',
+                  style: GoogleFonts.manrope(
+                    fontSize: isMobile ? 18 : 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              Text(
-                'Cluster overview',
-                style: GoogleFonts.manrope(
-                  fontSize: 13,
-                  color: const Color(0xFF6B7280),
+                Text(
+                  'Cluster overview',
+                  style: GoogleFonts.manrope(
+                    fontSize: isMobile ? 11 : 13,
+                    color: const Color(0xFF6B7280),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const Spacer(),
           IconButton(
             onPressed: _loadData,
             icon: const Icon(Icons.refresh_rounded),
@@ -224,6 +230,7 @@ class _ClusterHeadDashboardScreenState
   }
 
   Widget _buildDashboard() {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     final total =
         (_stats['submitted'] ?? 0) +
         (_stats['draft'] ?? 0) +
@@ -233,7 +240,7 @@ class _ClusterHeadDashboardScreenState
     final completionPct = total > 0 ? (_stats['approved']! / total * 100) : 0.0;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 12 : 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -341,14 +348,20 @@ class _ClusterHeadDashboardScreenState
             },
           ),
           const SizedBox(height: 24),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(flex: 2, child: _buildRecentSurveys()),
-              const SizedBox(width: 16),
-              Expanded(child: _buildCompletionCard(completionPct)),
-            ],
-          ),
+          if (isMobile) ...[
+            _buildRecentSurveys(),
+            const SizedBox(height: 16),
+            _buildCompletionCard(completionPct),
+          ] else ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 2, child: _buildRecentSurveys()),
+                const SizedBox(width: 16),
+                Expanded(child: _buildCompletionCard(completionPct)),
+              ],
+            ),
+          ],
         ],
       ),
     );

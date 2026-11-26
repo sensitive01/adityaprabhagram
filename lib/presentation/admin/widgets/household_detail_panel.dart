@@ -77,11 +77,14 @@ class _HouseholdDetailPanelState extends State<HouseholdDetailPanel> {
   @override
   Widget build(BuildContext context) {
     final h = widget.household;
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return Container(
-      width: 340,
+      width: isMobile ? double.infinity : 340,
       decoration: BoxDecoration(
         color: AppTheme.surfaceLight,
-        border: Border(left: BorderSide(color: const Color(0xFFE2E8F0))),
+        border: isMobile
+            ? null
+            : const Border(left: BorderSide(color: Color(0xFFE2E8F0))),
       ),
       child: Column(
         children: [

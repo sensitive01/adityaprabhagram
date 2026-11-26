@@ -108,72 +108,143 @@ class _AdminBulletinsScreenState extends State<AdminBulletinsScreen> {
   }
 
   Widget _buildTopBar() {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : 24,
+        vertical: isMobile ? 12 : 16,
+      ),
       decoration: BoxDecoration(
         color: AppTheme.surfaceLight,
         border: Border(bottom: BorderSide(color: const Color(0xFFE2E8F0))),
       ),
-      child: Row(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Bulletins / Information',
-                style: GoogleFonts.manrope(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+      child: isMobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Bulletins / Information',
+                            style: GoogleFonts.manrope(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            'Advisories and announcements',
+                            style: GoogleFonts.manrope(
+                              fontSize: 11,
+                              color: const Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: _showCreateDialog,
+                      icon: const Icon(Icons.add_circle_rounded, color: AppTheme.primary),
+                      tooltip: 'New Bulletin',
+                    ),
+                    IconButton(
+                      onPressed: _loadData,
+                      icon: const Icon(Icons.refresh_rounded),
+                      tooltip: 'Refresh',
+                    ),
+                  ],
                 ),
-              ),
-              Text(
-                'Manage agricultural advisories and announcements',
-                style: GoogleFonts.manrope(
-                  fontSize: 13,
-                  color: const Color(0xFF6B7280),
+                const SizedBox(height: 10),
+                Center(
+                  child: SegmentedButton<bool>(
+                    segments: const [
+                      ButtonSegment(
+                        value: true,
+                        label: Text('Published'),
+                        icon: Icon(Icons.public_rounded, size: 16),
+                      ),
+                      ButtonSegment(
+                        value: false,
+                        label: Text('Drafts'),
+                        icon: Icon(Icons.drafts_rounded, size: 16),
+                      ),
+                    ],
+                    selected: {_showPublished},
+                    onSelectionChanged: (s) =>
+                        setState(() => _showPublished = s.first),
+                    style: ButtonStyle(
+                      textStyle: WidgetStateProperty.all(
+                        GoogleFonts.manrope(fontSize: 12),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          SegmentedButton<bool>(
-            segments: const [
-              ButtonSegment(
-                value: true,
-                label: Text('Published'),
-                icon: Icon(Icons.public_rounded, size: 16),
-              ),
-              ButtonSegment(
-                value: false,
-                label: Text('Drafts'),
-                icon: Icon(Icons.drafts_rounded, size: 16),
-              ),
-            ],
-            selected: {_showPublished},
-            onSelectionChanged: (s) => setState(() => _showPublished = s.first),
-            style: ButtonStyle(
-              textStyle: WidgetStateProperty.all(
-                GoogleFonts.manrope(fontSize: 13),
-              ),
+              ],
+            )
+          : Row(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Bulletins / Information',
+                      style: GoogleFonts.manrope(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      'Manage agricultural advisories and announcements',
+                      style: GoogleFonts.manrope(
+                        fontSize: 13,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                SegmentedButton<bool>(
+                  segments: const [
+                    ButtonSegment(
+                      value: true,
+                      label: Text('Published'),
+                      icon: Icon(Icons.public_rounded, size: 16),
+                    ),
+                    ButtonSegment(
+                      value: false,
+                      label: Text('Drafts'),
+                      icon: Icon(Icons.drafts_rounded, size: 16),
+                    ),
+                  ],
+                  selected: {_showPublished},
+                  onSelectionChanged: (s) =>
+                      setState(() => _showPublished = s.first),
+                  style: ButtonStyle(
+                    textStyle: WidgetStateProperty.all(
+                      GoogleFonts.manrope(fontSize: 13),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                FilledButton.icon(
+                  onPressed: _showCreateDialog,
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: Text(
+                    'New Bulletin',
+                    style: GoogleFonts.manrope(fontSize: 13),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: _loadData,
+                  icon: const Icon(Icons.refresh_rounded),
+                  tooltip: 'Refresh',
+                ),
+              ],
             ),
-          ),
-          const SizedBox(width: 12),
-          FilledButton.icon(
-            onPressed: _showCreateDialog,
-            icon: const Icon(Icons.add_rounded, size: 18),
-            label: Text(
-              'New Bulletin',
-              style: GoogleFonts.manrope(fontSize: 13),
-            ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            onPressed: _loadData,
-            icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Refresh',
-          ),
-        ],
-      ),
     );
   }
 

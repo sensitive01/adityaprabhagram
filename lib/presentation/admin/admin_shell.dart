@@ -104,6 +104,61 @@ class _AdminShellState extends State<AdminShell> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 768;
+
+    if (isMobile) {
+      return Scaffold(
+        backgroundColor: AppTheme.backgroundLight,
+        appBar: AppBar(
+          backgroundColor: AppTheme.primary,
+          elevation: 0,
+          title: Text(
+            'Admin Portal',
+            style: GoogleFonts.manrope(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          leading: Builder(
+            builder: (ctx) => IconButton(
+              icon: const Icon(Icons.menu_rounded, color: Colors.white),
+              onPressed: () => Scaffold.of(ctx).openDrawer(),
+              tooltip: 'Navigation Menu',
+            ),
+          ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Center(
+                child: CircleAvatar(
+                  radius: 14,
+                  backgroundColor: Colors.white.withAlpha(51),
+                  child: Text(
+                    _adminName.isNotEmpty ? _adminName[0].toUpperCase() : 'A',
+                    style: GoogleFonts.manrope(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: _handleLogout,
+              icon: const Icon(Icons.logout_rounded, color: Colors.white, size: 20),
+              tooltip: 'Logout',
+            ),
+          ],
+        ),
+        drawer: Drawer(
+          child: _buildSidebar(double.infinity, isDrawer: true),
+        ),
+        body: widget.child,
+      );
+    }
+
     final sidebarWidth = _sidebarCollapsed ? 64.0 : 240.0;
 
     return Scaffold(
@@ -114,7 +169,7 @@ class _AdminShellState extends State<AdminShell> {
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
             width: sidebarWidth,
-            child: _buildSidebar(sidebarWidth),
+            child: _buildSidebar(sidebarWidth, isDrawer: false),
           ),
           Expanded(child: widget.child),
         ],
@@ -122,26 +177,30 @@ class _AdminShellState extends State<AdminShell> {
     );
   }
 
-  Widget _buildSidebar(double width) {
+  Widget _buildSidebar(double width, {bool isDrawer = false}) {
     return Container(
       color: AppTheme.primary,
-      child: Column(
-        children: [
-          _buildSidebarHeader(),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: _navItems.length,
-              itemBuilder: (context, i) => _buildNavTile(_navItems[i], i),
+      child: SafeArea(
+        child: Column(
+          children: [
+            _buildSidebarHeader(isDrawer: isDrawer),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: _navItems.length,
+                itemBuilder: (context, i) =>
+                    _buildNavTile(_navItems[i], i, isDrawer: isDrawer),
+              ),
             ),
-          ),
-          _buildSidebarFooter(),
-        ],
+            _buildSidebarFooter(isDrawer: isDrawer),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSidebarHeader() {
+  Widget _buildSidebarHeader({bool isDrawer = false}) {
+    final collapsed = isDrawer ? false : _sidebarCollapsed;
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
       decoration: BoxDecoration(
@@ -162,7 +221,7 @@ class _AdminShellState extends State<AdminShell> {
               size: 20,
             ),
           ),
-          if (!_sidebarCollapsed) ...[
+          if (!collapsed) ...[
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -189,35 +248,40 @@ class _AdminShellState extends State<AdminShell> {
               ),
             ),
           ],
-          IconButton(
-            onPressed: () =>
-                setState(() => _sidebarCollapsed = !_sidebarCollapsed),
-            icon: Icon(
-              _sidebarCollapsed
-                  ? Icons.chevron_right_rounded
-                  : Icons.chevron_left_rounded,
-              color: Colors.white.withAlpha(204),
-              size: 20,
+          if (!isDrawer)
+            IconButton(
+              onPressed: () =>
+                  setState(() => _sidebarCollapsed = !_sidebarCollapsed),
+              icon: Icon(
+                _sidebarCollapsed
+                    ? Icons.chevron_right_rounded
+                    : Icons.chevron_left_rounded,
+                color: Colors.white.withAlpha(204),
+                size: 20,
+              ),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildNavTile(_NavItem item, int index) {
+  Widget _buildNavTile(_NavItem item, int index, {bool isDrawer = false}) {
     final isSelected = widget.selectedIndex == index;
+    final collapsed = isDrawer ? false : _sidebarCollapsed;
     return Tooltip(
-      message: _sidebarCollapsed ? item.label : '',
+      message: collapsed ? item.label : '',
       child: InkWell(
-        onTap: () => context.go(item.route),
+        onTap: () {
+          if (isDrawer) Navigator.of(context).pop();
+          context.go(item.route);
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           padding: EdgeInsets.symmetric(
-            horizontal: _sidebarCollapsed ? 12 : 12,
+            horizontal: 12,
             vertical: 10,
           ),
           decoration: BoxDecoration(
@@ -231,7 +295,7 @@ class _AdminShellState extends State<AdminShell> {
                 color: isSelected ? Colors.white : Colors.white.withAlpha(166),
                 size: 20,
               ),
-              if (!_sidebarCollapsed) ...[
+              if (!collapsed) ...[
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -256,7 +320,8 @@ class _AdminShellState extends State<AdminShell> {
     );
   }
 
-  Widget _buildSidebarFooter() {
+  Widget _buildSidebarFooter({bool isDrawer = false}) {
+    final collapsed = isDrawer ? false : _sidebarCollapsed;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -276,7 +341,7 @@ class _AdminShellState extends State<AdminShell> {
               ),
             ),
           ),
-          if (!_sidebarCollapsed) ...[
+          if (!collapsed) ...[
             const SizedBox(width: 10),
             Expanded(
               child: Text(

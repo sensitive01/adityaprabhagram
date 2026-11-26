@@ -359,64 +359,132 @@ class _AdminSurveyQuestionsScreenState
   }
 
   Widget _buildTopBar() {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12 : 16,
+        vertical: isMobile ? 10 : 12,
+      ),
       decoration: BoxDecoration(
         color: AppTheme.surfaceLight,
         border: const Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: isMobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  'Survey Questions',
-                  style: GoogleFonts.manrope(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Survey Questions',
+                            style: GoogleFonts.manrope(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            'Manage templates, sections & questions',
+                            style: GoogleFonts.manrope(
+                              fontSize: 11,
+                              color: const Color(0xFF6B7280),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: _loadTemplates,
+                      icon: const Icon(Icons.refresh_rounded, size: 20),
+                      tooltip: 'Refresh',
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _TopBarButton(
+                        icon: Icons.add_rounded,
+                        label: 'Template',
+                        onPressed: _showCreateTemplateDialog,
+                      ),
+                      const SizedBox(width: 8),
+                      _TopBarButton(
+                        icon: Icons.playlist_add_rounded,
+                        label: 'Section',
+                        onPressed: _showCreateSectionDialog,
+                      ),
+                      const SizedBox(width: 8),
+                      _TopBarButton(
+                        icon: Icons.help_outline_rounded,
+                        label: 'Question',
+                        onPressed: _showAddQuestionDialog,
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  'Manage templates, sections, questions & options',
-                  style: GoogleFonts.manrope(
-                    fontSize: 12,
-                    color: const Color(0xFF6B7280),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Survey Questions',
+                        style: GoogleFonts.manrope(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        'Manage templates, sections, questions & options',
+                        style: GoogleFonts.manrope(
+                          fontSize: 12,
+                          color: const Color(0xFF6B7280),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
-                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(width: 8),
+                _TopBarButton(
+                  icon: Icons.add_rounded,
+                  label: 'Template',
+                  onPressed: _showCreateTemplateDialog,
+                ),
+                const SizedBox(width: 4),
+                _TopBarButton(
+                  icon: Icons.playlist_add_rounded,
+                  label: 'Section',
+                  onPressed: _showCreateSectionDialog,
+                ),
+                const SizedBox(width: 4),
+                _TopBarButton(
+                  icon: Icons.help_outline_rounded,
+                  label: 'Question',
+                  onPressed: _showAddQuestionDialog,
+                ),
+                const SizedBox(width: 4),
+                IconButton(
+                  onPressed: _loadTemplates,
+                  icon: const Icon(Icons.refresh_rounded, size: 20),
+                  tooltip: 'Refresh',
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 8),
-          _TopBarButton(
-            icon: Icons.add_rounded,
-            label: 'Template',
-            onPressed: _showCreateTemplateDialog,
-          ),
-          const SizedBox(width: 4),
-          _TopBarButton(
-            icon: Icons.playlist_add_rounded,
-            label: 'Section',
-            onPressed: _showCreateSectionDialog,
-          ),
-          const SizedBox(width: 4),
-          _TopBarButton(
-            icon: Icons.help_outline_rounded,
-            label: 'Question',
-            onPressed: _showAddQuestionDialog,
-          ),
-          const SizedBox(width: 4),
-          IconButton(
-            onPressed: _loadTemplates,
-            icon: const Icon(Icons.refresh_rounded, size: 20),
-            tooltip: 'Refresh',
-            padding: const EdgeInsets.all(8),
-            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-          ),
-        ],
-      ),
     );
   }
 

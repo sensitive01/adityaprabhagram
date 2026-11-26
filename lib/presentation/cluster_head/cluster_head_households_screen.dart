@@ -143,70 +143,132 @@ class _ClusterHeadHouseholdsScreenState
   }
 
   Widget _buildTopBar() {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : 24,
+        vertical: isMobile ? 12 : 16,
+      ),
       decoration: BoxDecoration(
         color: AppTheme.surfaceLight,
         border: Border(bottom: BorderSide(color: const Color(0xFFE2E8F0))),
       ),
-      child: Row(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Households',
-                style: GoogleFonts.manrope(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+      child: isMobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Households',
+                            style: GoogleFonts.manrope(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            '${_filtered.length} households in your cluster',
+                            style: GoogleFonts.manrope(
+                              fontSize: 11,
+                              color: const Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: _clusterId != null ? _showCreateHouseholdDialog : null,
+                      icon: const Icon(Icons.add_circle_rounded, color: AppTheme.primary),
+                      tooltip: 'Create Household',
+                    ),
+                    IconButton(
+                      onPressed: _loadData,
+                      icon: const Icon(Icons.refresh_rounded),
+                      tooltip: 'Refresh',
+                    ),
+                  ],
                 ),
-              ),
-              Text(
-                '${_filtered.length} households in your cluster',
-                style: GoogleFonts.manrope(
-                  fontSize: 13,
-                  color: const Color(0xFF6B7280),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _searchController,
+                  onChanged: (v) => setState(() {
+                    _searchQuery = v.toLowerCase();
+                    _currentPage = 0;
+                  }),
+                  decoration: InputDecoration(
+                    hintText: 'Search by HH_ID, name, village...',
+                    prefixIcon: const Icon(Icons.search_rounded, size: 18),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    isDense: true,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          SizedBox(
-            width: 260,
-            child: TextField(
-              controller: _searchController,
-              onChanged: (v) => setState(() {
-                _searchQuery = v.toLowerCase();
-                _currentPage = 0;
-              }),
-              decoration: InputDecoration(
-                hintText: 'Search by HH_ID, name, village...',
-                prefixIcon: const Icon(Icons.search_rounded, size: 18),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
+              ],
+            )
+          : Row(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Households',
+                      style: GoogleFonts.manrope(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      '${_filtered.length} households in your cluster',
+                      style: GoogleFonts.manrope(
+                        fontSize: 13,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
                 ),
-                isDense: true,
-              ),
+                const Spacer(),
+                SizedBox(
+                  width: 260,
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (v) => setState(() {
+                      _searchQuery = v.toLowerCase();
+                      _currentPage = 0;
+                    }),
+                    decoration: InputDecoration(
+                      hintText: 'Search by HH_ID, name, village...',
+                      prefixIcon: const Icon(Icons.search_rounded, size: 18),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      isDense: true,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                FilledButton.icon(
+                  onPressed: _clusterId != null ? _showCreateHouseholdDialog : null,
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: Text(
+                    '+ Create Household',
+                    style: GoogleFonts.manrope(fontSize: 13),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: _loadData,
+                  icon: const Icon(Icons.refresh_rounded),
+                  tooltip: 'Refresh',
+                ),
+              ],
             ),
-          ),
-          const SizedBox(width: 12),
-          FilledButton.icon(
-            onPressed: _clusterId != null ? _showCreateHouseholdDialog : null,
-            icon: const Icon(Icons.add_rounded, size: 18),
-            label: Text(
-              '+ Create Household',
-              style: GoogleFonts.manrope(fontSize: 13),
-            ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            onPressed: _loadData,
-            icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Refresh',
-          ),
-        ],
-      ),
     );
   }
 

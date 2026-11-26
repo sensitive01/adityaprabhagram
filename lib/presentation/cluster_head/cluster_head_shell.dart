@@ -93,6 +93,61 @@ class _ClusterHeadShellState extends State<ClusterHeadShell> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 768;
+
+    if (isMobile) {
+      return Scaffold(
+        backgroundColor: AppTheme.backgroundLight,
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF1D4ED8),
+          elevation: 0,
+          title: Text(
+            _clusterName.isNotEmpty ? _clusterName : 'Cluster Head Portal',
+            style: GoogleFonts.manrope(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          leading: Builder(
+            builder: (ctx) => IconButton(
+              icon: const Icon(Icons.menu_rounded, color: Colors.white),
+              onPressed: () => Scaffold.of(ctx).openDrawer(),
+              tooltip: 'Navigation Menu',
+            ),
+          ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Center(
+                child: CircleAvatar(
+                  radius: 14,
+                  backgroundColor: Colors.white.withAlpha(51),
+                  child: Text(
+                    _chName.isNotEmpty ? _chName[0].toUpperCase() : 'C',
+                    style: GoogleFonts.manrope(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: _handleLogout,
+              icon: const Icon(Icons.logout_rounded, color: Colors.white, size: 20),
+              tooltip: 'Logout',
+            ),
+          ],
+        ),
+        drawer: Drawer(
+          child: _buildSidebar(isDrawer: true),
+        ),
+        body: widget.child,
+      );
+    }
+
     final sidebarWidth = _sidebarCollapsed ? 64.0 : 240.0;
     return Scaffold(
       backgroundColor: AppTheme.backgroundLight,
@@ -102,7 +157,7 @@ class _ClusterHeadShellState extends State<ClusterHeadShell> {
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
             width: sidebarWidth,
-            child: _buildSidebar(),
+            child: _buildSidebar(isDrawer: false),
           ),
           Expanded(child: widget.child),
         ],
@@ -110,26 +165,30 @@ class _ClusterHeadShellState extends State<ClusterHeadShell> {
     );
   }
 
-  Widget _buildSidebar() {
+  Widget _buildSidebar({bool isDrawer = false}) {
     return Container(
       color: const Color(0xFF1D4ED8), // Blue for Cluster Head
-      child: Column(
-        children: [
-          _buildSidebarHeader(),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: _navItems.length,
-              itemBuilder: (context, i) => _buildNavTile(_navItems[i], i),
+      child: SafeArea(
+        child: Column(
+          children: [
+            _buildSidebarHeader(isDrawer: isDrawer),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: _navItems.length,
+                itemBuilder: (context, i) =>
+                    _buildNavTile(_navItems[i], i, isDrawer: isDrawer),
+              ),
             ),
-          ),
-          _buildSidebarFooter(),
-        ],
+            _buildSidebarFooter(isDrawer: isDrawer),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSidebarHeader() {
+  Widget _buildSidebarHeader({bool isDrawer = false}) {
+    final collapsed = isDrawer ? false : _sidebarCollapsed;
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
       decoration: BoxDecoration(
@@ -150,7 +209,7 @@ class _ClusterHeadShellState extends State<ClusterHeadShell> {
               size: 20,
             ),
           ),
-          if (!_sidebarCollapsed) ...[
+          if (!collapsed) ...[
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -178,30 +237,35 @@ class _ClusterHeadShellState extends State<ClusterHeadShell> {
               ),
             ),
           ],
-          IconButton(
-            onPressed: () =>
-                setState(() => _sidebarCollapsed = !_sidebarCollapsed),
-            icon: Icon(
-              _sidebarCollapsed
-                  ? Icons.chevron_right_rounded
-                  : Icons.chevron_left_rounded,
-              color: Colors.white.withAlpha(204),
-              size: 20,
+          if (!isDrawer)
+            IconButton(
+              onPressed: () =>
+                  setState(() => _sidebarCollapsed = !_sidebarCollapsed),
+              icon: Icon(
+                _sidebarCollapsed
+                    ? Icons.chevron_right_rounded
+                    : Icons.chevron_left_rounded,
+                color: Colors.white.withAlpha(204),
+                size: 20,
+              ),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildNavTile(_NavItem item, int index) {
+  Widget _buildNavTile(_NavItem item, int index, {bool isDrawer = false}) {
     final isSelected = widget.selectedIndex == index;
+    final collapsed = isDrawer ? false : _sidebarCollapsed;
     return Tooltip(
-      message: _sidebarCollapsed ? item.label : '',
+      message: collapsed ? item.label : '',
       child: InkWell(
-        onTap: () => context.go(item.route),
+        onTap: () {
+          if (isDrawer) Navigator.of(context).pop();
+          context.go(item.route);
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -217,7 +281,7 @@ class _ClusterHeadShellState extends State<ClusterHeadShell> {
                 color: isSelected ? Colors.white : Colors.white.withAlpha(166),
                 size: 20,
               ),
-              if (!_sidebarCollapsed) ...[
+              if (!collapsed) ...[
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -242,7 +306,8 @@ class _ClusterHeadShellState extends State<ClusterHeadShell> {
     );
   }
 
-  Widget _buildSidebarFooter() {
+  Widget _buildSidebarFooter({bool isDrawer = false}) {
+    final collapsed = isDrawer ? false : _sidebarCollapsed;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -262,7 +327,7 @@ class _ClusterHeadShellState extends State<ClusterHeadShell> {
               ),
             ),
           ),
-          if (!_sidebarCollapsed) ...[
+          if (!collapsed) ...[
             const SizedBox(width: 10),
             Expanded(
               child: Text(

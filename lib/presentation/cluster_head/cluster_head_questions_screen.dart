@@ -150,14 +150,19 @@ class _ClusterHeadQuestionsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return ClusterHeadShell(
       selectedIndex: 4,
-      child: Row(
-        children: [
-          Expanded(child: _buildMainContent()),
-          if (_selectedQuestion != null) _buildDetailPanel(),
-        ],
-      ),
+      child: isMobile
+          ? (_selectedQuestion != null
+              ? _buildDetailPanel(isMobile: true)
+              : _buildMainContent())
+          : Row(
+              children: [
+                Expanded(child: _buildMainContent()),
+                if (_selectedQuestion != null) _buildDetailPanel(isMobile: false),
+              ],
+            ),
     );
   }
 
@@ -182,66 +187,133 @@ class _ClusterHeadQuestionsScreenState
   }
 
   Widget _buildTopBar() {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : 24,
+        vertical: isMobile ? 12 : 16,
+      ),
       decoration: BoxDecoration(
         color: AppTheme.surfaceLight,
         border: Border(bottom: BorderSide(color: const Color(0xFFE2E8F0))),
       ),
-      child: Row(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Household Questions',
-                style: GoogleFonts.manrope(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+      child: isMobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Household Questions',
+                            style: GoogleFonts.manrope(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            'Questions in your cluster',
+                            style: GoogleFonts.manrope(
+                              fontSize: 11,
+                              color: const Color(0xFF6B7280),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: _loadData,
+                      icon: const Icon(Icons.refresh_rounded),
+                      tooltip: 'Refresh',
+                    ),
+                  ],
                 ),
-              ),
-              Text(
-                'Questions from households in your cluster',
-                style: GoogleFonts.manrope(
-                  fontSize: 13,
-                  color: const Color(0xFF6B7280),
+                const SizedBox(height: 10),
+                Center(
+                  child: SegmentedButton<bool>(
+                    segments: const [
+                      ButtonSegment(
+                        value: true,
+                        label: Text('Unanswered'),
+                        icon: Icon(Icons.help_outline_rounded, size: 16),
+                      ),
+                      ButtonSegment(
+                        value: false,
+                        label: Text('Answered'),
+                        icon: Icon(Icons.check_circle_outline_rounded, size: 16),
+                      ),
+                    ],
+                    selected: {_showUnanswered},
+                    onSelectionChanged: (s) => setState(() {
+                      _showUnanswered = s.first;
+                      _selectedQuestion = null;
+                    }),
+                    style: ButtonStyle(
+                      textStyle: WidgetStateProperty.all(
+                        GoogleFonts.manrope(fontSize: 12),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const Spacer(),
-          SegmentedButton<bool>(
-            segments: const [
-              ButtonSegment(
-                value: true,
-                label: Text('Unanswered'),
-                icon: Icon(Icons.help_outline_rounded, size: 16),
-              ),
-              ButtonSegment(
-                value: false,
-                label: Text('Answered'),
-                icon: Icon(Icons.check_circle_outline_rounded, size: 16),
-              ),
-            ],
-            selected: {_showUnanswered},
-            onSelectionChanged: (s) => setState(() {
-              _showUnanswered = s.first;
-              _selectedQuestion = null;
-            }),
-            style: ButtonStyle(
-              textStyle: WidgetStateProperty.all(
-                GoogleFonts.manrope(fontSize: 13),
-              ),
+              ],
+            )
+          : Row(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Household Questions',
+                      style: GoogleFonts.manrope(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      'Questions from households in your cluster',
+                      style: GoogleFonts.manrope(
+                        fontSize: 13,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                SegmentedButton<bool>(
+                  segments: const [
+                    ButtonSegment(
+                      value: true,
+                      label: Text('Unanswered'),
+                      icon: Icon(Icons.help_outline_rounded, size: 16),
+                    ),
+                    ButtonSegment(
+                      value: false,
+                      label: Text('Answered'),
+                      icon: Icon(Icons.check_circle_outline_rounded, size: 16),
+                    ),
+                  ],
+                  selected: {_showUnanswered},
+                  onSelectionChanged: (s) => setState(() {
+                    _showUnanswered = s.first;
+                    _selectedQuestion = null;
+                  }),
+                  style: ButtonStyle(
+                    textStyle: WidgetStateProperty.all(
+                      GoogleFonts.manrope(fontSize: 13),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: _loadData,
+                  icon: const Icon(Icons.refresh_rounded),
+                  tooltip: 'Refresh',
+                ),
+              ],
             ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            onPressed: _loadData,
-            icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Refresh',
-          ),
-        ],
-      ),
     );
   }
 
@@ -358,13 +430,13 @@ class _ClusterHeadQuestionsScreenState
     );
   }
 
-  Widget _buildDetailPanel() {
+  Widget _buildDetailPanel({bool isMobile = false}) {
     final q = _selectedQuestion!;
     final hh = q['households'] as Map<String, dynamic>?;
     final answers = q['question_answers'] as List? ?? [];
     final isAnswered = q['is_answered'] as bool? ?? false;
     return Container(
-      width: 360,
+      width: isMobile ? double.infinity : 360,
       decoration: BoxDecoration(
         color: AppTheme.surfaceLight,
         border: Border(left: BorderSide(color: const Color(0xFFE2E8F0))),

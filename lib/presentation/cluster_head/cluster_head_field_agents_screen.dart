@@ -95,34 +95,39 @@ class _ClusterHeadFieldAgentsScreenState
   }
 
   Widget _buildTopBar() {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : 24,
+        vertical: isMobile ? 12 : 16,
+      ),
       decoration: BoxDecoration(
         color: AppTheme.surfaceLight,
         border: Border(bottom: BorderSide(color: const Color(0xFFE2E8F0))),
       ),
       child: Row(
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Field Agents',
-                style: GoogleFonts.manrope(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Field Agents',
+                  style: GoogleFonts.manrope(
+                    fontSize: isMobile ? 18 : 20,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              Text(
-                '${_agents.length} agents in your cluster',
-                style: GoogleFonts.manrope(
-                  fontSize: 13,
-                  color: const Color(0xFF6B7280),
+                Text(
+                  '${_agents.length} agents in your cluster',
+                  style: GoogleFonts.manrope(
+                    fontSize: isMobile ? 11 : 13,
+                    color: const Color(0xFF6B7280),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const Spacer(),
           IconButton(
             onPressed: _loadData,
             icon: const Icon(Icons.refresh_rounded),
@@ -134,6 +139,7 @@ class _ClusterHeadFieldAgentsScreenState
   }
 
   Widget _buildContent() {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     if (_agents.isEmpty) {
       return const EmptyStateWidget(
         icon: Icons.group_off_rounded,
@@ -142,7 +148,7 @@ class _ClusterHeadFieldAgentsScreenState
       );
     }
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 12 : 24),
       child: AdminDataTable(
         columns: const ['Name', 'Email', 'Username', 'Status'],
         rows: _agents.map((a) {

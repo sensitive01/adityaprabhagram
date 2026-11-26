@@ -95,40 +95,55 @@ class _ClusterHeadSurveyReviewScreenState
     final status = s['status'] as String? ?? 'draft';
     final responses = s['responses'] as Map<String, dynamic>?;
     final rejectionReason = s['rejection_reason'] as String?;
+    final isMobile = MediaQuery.of(context).size.width < 768;
 
     return Column(
       children: [
-        _buildTopBar(hh, status),
+        _buildTopBar(hh, status, isMobile),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            padding: EdgeInsets.all(isMobile ? 12 : 24),
+            child: isMobile
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _buildInfoCard(hh, agent, status, rejectionReason),
                       const SizedBox(height: 16),
+                      _buildActionCard(status),
+                      const SizedBox(height: 16),
                       _buildResponsesCard(responses),
                     ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildInfoCard(hh, agent, status, rejectionReason),
+                            const SizedBox(height: 16),
+                            _buildResponsesCard(responses),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      SizedBox(width: 300, child: _buildActionCard(status)),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 16),
-                SizedBox(width: 300, child: _buildActionCard(status)),
-              ],
-            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildTopBar(Map<String, dynamic>? hh, String status) {
+  Widget _buildTopBar(Map<String, dynamic>? hh, String status, bool isMobile) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12 : 24,
+        vertical: isMobile ? 12 : 16,
+      ),
       decoration: BoxDecoration(
         color: AppTheme.surfaceLight,
         border: Border(bottom: BorderSide(color: const Color(0xFFE2E8F0))),
@@ -141,26 +156,30 @@ class _ClusterHeadSurveyReviewScreenState
             tooltip: 'Back to Surveys',
           ),
           const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Survey Review — ${hh?['hh_id'] ?? '—'}',
-                style: GoogleFonts.manrope(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Survey Review — ${hh?['hh_id'] ?? '—'}',
+                  style: GoogleFonts.manrope(
+                    fontSize: isMobile ? 15 : 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              Text(
-                hh?['name'] as String? ?? '—',
-                style: GoogleFonts.manrope(
-                  fontSize: 13,
-                  color: const Color(0xFF6B7280),
+                Text(
+                  hh?['name'] as String? ?? '—',
+                  style: GoogleFonts.manrope(
+                    fontSize: isMobile ? 11 : 13,
+                    color: const Color(0xFF6B7280),
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const Spacer(),
+          const SizedBox(width: 8),
           StatusBadgeWidget(status: _statusLabel(status)),
         ],
       ),

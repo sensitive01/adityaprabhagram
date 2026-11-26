@@ -87,34 +87,39 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   }
 
   Widget _buildTopBar() {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : 24,
+        vertical: isMobile ? 12 : 16,
+      ),
       decoration: BoxDecoration(
         color: AppTheme.surfaceLight,
         border: Border(bottom: BorderSide(color: const Color(0xFFE2E8F0))),
       ),
       child: Row(
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Reports & Analytics',
-                style: GoogleFonts.manrope(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Reports & Analytics',
+                  style: GoogleFonts.manrope(
+                    fontSize: isMobile ? 18 : 20,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              Text(
-                'System-wide performance metrics',
-                style: GoogleFonts.manrope(
-                  fontSize: 13,
-                  color: const Color(0xFF6B7280),
+                Text(
+                  'System-wide performance metrics',
+                  style: GoogleFonts.manrope(
+                    fontSize: isMobile ? 11 : 13,
+                    color: const Color(0xFF6B7280),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const Spacer(),
           IconButton(
             onPressed: _loadData,
             icon: const Icon(Icons.refresh_rounded),
@@ -157,8 +162,10 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
         ? (correctionSurveys / totalSurveys * 100)
         : 0.0;
 
+    final isMobile = MediaQuery.of(context).size.width < 768;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 12 : 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -171,73 +178,129 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _metricCard(
+          if (isMobile)
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 1.05,
+              children: [
+                _metricCard(
                   'Completion Rate',
                   '${completionRate.toStringAsFixed(1)}%',
                   Icons.check_circle_rounded,
                   AppTheme.success,
                   'Approved / Total',
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _metricCard(
+                _metricCard(
                   'Correction Rate',
                   '${correctionRate.toStringAsFixed(1)}%',
                   Icons.warning_rounded,
                   AppTheme.warning,
                   'Corrections / Total',
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _metricCard(
+                _metricCard(
                   'Total Surveys',
                   '$totalSurveys',
                   Icons.assignment_rounded,
                   AppTheme.primary,
                   'All survey instances',
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _metricCard(
-                  'Household Coverage',
+                _metricCard(
+                  'HH Coverage',
                   '${households.isNotEmpty ? (assignedHouseholds / households.length * 100).toStringAsFixed(1) : 0}%',
                   Icons.home_work_rounded,
                   AppTheme.info,
                   'Assigned / Total HH',
                 ),
-              ),
-            ],
-          ),
+              ],
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: _metricCard(
+                    'Completion Rate',
+                    '${completionRate.toStringAsFixed(1)}%',
+                    Icons.check_circle_rounded,
+                    AppTheme.success,
+                    'Approved / Total',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _metricCard(
+                    'Correction Rate',
+                    '${correctionRate.toStringAsFixed(1)}%',
+                    Icons.warning_rounded,
+                    AppTheme.warning,
+                    'Corrections / Total',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _metricCard(
+                    'Total Surveys',
+                    '$totalSurveys',
+                    Icons.assignment_rounded,
+                    AppTheme.primary,
+                    'All survey instances',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _metricCard(
+                    'Household Coverage',
+                    '${households.isNotEmpty ? (assignedHouseholds / households.length * 100).toStringAsFixed(1) : 0}%',
+                    Icons.home_work_rounded,
+                    AppTheme.info,
+                    'Assigned / Total HH',
+                  ),
+                ),
+              ],
+            ),
           const SizedBox(height: 24),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _buildSurveyStatusTable(
-                  draftSurveys,
-                  submittedSurveys,
-                  underReviewSurveys,
-                  correctionSurveys,
-                  approvedSurveys,
-                  totalSurveys,
+          if (isMobile) ...[
+            _buildSurveyStatusTable(
+              draftSurveys,
+              submittedSurveys,
+              underReviewSurveys,
+              correctionSurveys,
+              approvedSurveys,
+              totalSurveys,
+            ),
+            const SizedBox(height: 16),
+            _buildHouseholdCoverageTable(
+              assignedHouseholds,
+              unassignedHouseholds,
+              households.length,
+            ),
+          ] else
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _buildSurveyStatusTable(
+                    draftSurveys,
+                    submittedSurveys,
+                    underReviewSurveys,
+                    correctionSurveys,
+                    approvedSurveys,
+                    totalSurveys,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildHouseholdCoverageTable(
-                  assignedHouseholds,
-                  unassignedHouseholds,
-                  households.length,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildHouseholdCoverageTable(
+                    assignedHouseholds,
+                    unassignedHouseholds,
+                    households.length,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
           const SizedBox(height: 16),
           _buildClusterTable(clusters, surveys, households),
         ],
@@ -252,8 +315,9 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     Color color,
     String subtitle,
   ) {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isMobile ? 12 : 20),
       decoration: BoxDecoration(
         color: AppTheme.surfaceLight,
         borderRadius: BorderRadius.circular(14),
@@ -261,6 +325,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
@@ -274,11 +339,11 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isMobile ? 8 : 12),
           Text(
             value,
             style: GoogleFonts.manrope(
-              fontSize: 26,
+              fontSize: isMobile ? 22 : 26,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF1A1A1A),
             ),
@@ -286,7 +351,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
           Text(
             label,
             style: GoogleFonts.manrope(
-              fontSize: 13,
+              fontSize: isMobile ? 12 : 13,
               fontWeight: FontWeight.w600,
               color: const Color(0xFF374151),
             ),
@@ -294,7 +359,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
           Text(
             subtitle,
             style: GoogleFonts.manrope(
-              fontSize: 11,
+              fontSize: isMobile ? 10 : 11,
               color: const Color(0xFF9CA3AF),
             ),
           ),
