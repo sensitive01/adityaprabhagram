@@ -565,6 +565,15 @@ class _SurveyScreenState extends State<SurveyScreen> {
     return -1;
   }
 
+  /// The section_id of Section E, or null if not found.
+  String? get _pestSectionId {
+    for (final s in _orderedSections) {
+      final c = (s['code'] as String? ?? '').toUpperCase();
+      if (c == 'E' || c == 'SEC-E') return s['id'] as String?;
+    }
+    return null;
+  }
+
   /// Returns the section_id of the last section whose display_order is strictly
   /// less than Section E's display_order (i.e. the section just before E).
   String? get _sectionBeforePest {
@@ -618,6 +627,15 @@ class _SurveyScreenState extends State<SurveyScreen> {
       }
     }
     return -1;
+  }
+
+  /// The section_id of Section F, or null if not found.
+  String? get _fSectionId {
+    for (final s in _orderedSections) {
+      final c = (s['code'] as String? ?? '').toUpperCase();
+      if (c == 'F' || c == 'SEC-F') return s['id'] as String?;
+    }
+    return null;
   }
 
   /// Section immediately before SEC-F (by display_order).
@@ -824,10 +842,26 @@ class _SurveyScreenState extends State<SurveyScreen> {
     return best?['id'] as String?;
   }
 
+  /// True when any standalone/specialized section mode is active.
+  /// Prevents questionnaire question-based section getters (A, B, C, D) from falsely intercepting.
+  bool get _isAnySpecializedModeActive =>
+      _isPestSectionMode ||
+      _isFSectionMode ||
+      _isKSectionMode ||
+      _isLSectionMode ||
+      _isOSectionMode ||
+      _isPSectionMode ||
+      _isRSectionMode ||
+      _isSSectionMode ||
+      _isTSectionMode ||
+      _isXSectionMode ||
+      _isYSectionMode ||
+      _isZSectionMode;
+
   /// True when the questionnaire is showing Section A (Respondent Details)
   /// as a consolidated single page.
   bool get _isASectionMode {
-    if (_isReviewMode) return false;
+    if (_isReviewMode || _isAnySpecializedModeActive) return false;
     if (_questions.isEmpty) return false;
     final aId = _aSectionId;
     if (aId == null) return false;
@@ -883,7 +917,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
   /// True when the questionnaire is showing Section B (Household Profile)
   /// as a consolidated single page.
   bool get _isBSectionMode {
-    if (_isReviewMode) return false;
+    if (_isReviewMode || _isAnySpecializedModeActive) return false;
     if (_questions.isEmpty) return false;
     final bId = _bSectionId;
     if (bId == null) return false;
@@ -937,7 +971,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
   /// True when the questionnaire is showing Section C (Household Assets / Land / Livestock)
   /// as a consolidated 4-page structured experience.
   bool get _isCSectionMode {
-    if (_isReviewMode) return false;
+    if (_isReviewMode || _isAnySpecializedModeActive) return false;
     if (_questions.isEmpty) return false;
     final cId = _cSectionId;
     if (cId == null) return false;
@@ -953,7 +987,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
   /// True when the questionnaire is showing Section D (Agricultural Information)
   /// as a unified 2-page experience (Practices/Seeds & Cropping Pattern/Repeatable Crops).
   bool get _isDSectionMode {
-    if (_isReviewMode) return false;
+    if (_isReviewMode || _isAnySpecializedModeActive) return false;
     if (_questions.isEmpty) return false;
     final dId = _dSectionId;
     if (dId == null) return false;
@@ -1220,17 +1254,17 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
   // ── Section X (Border-Specific Constraints) helpers ───────────────────────
 
-  /// Returns true when Section X (section_code == 'X') exists.
+  /// Returns true when Section X (section_code == 'X' or 'SEC-X') exists.
   bool get _hasXSection => _orderedSections.any((s) {
-    final c = s['code'] as String;
-    return c == 'X';
+    final c = (s['code'] as String? ?? '').toUpperCase();
+    return c == 'X' || c == 'SEC-X' || c.startsWith('X-');
   });
 
   /// The display_order of Section X, or -1 if not found.
   int get _xSectionDisplayOrder {
     for (final s in _orderedSections) {
-      final c = s['code'] as String;
-      if (c == 'X') return (s['displayOrder'] as int? ?? -1);
+      final c = (s['code'] as String? ?? '').toUpperCase();
+      if (c == 'X' || c == 'SEC-X' || c.startsWith('X-')) return (s['displayOrder'] as int? ?? -1);
     }
     return -1;
   }
@@ -1269,17 +1303,17 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
   // ── Section Y (Household Priority Needs) helpers ──────────────────────────
 
-  /// Returns true when Section Y (section_code == 'Y') exists.
+  /// Returns true when Section Y (section_code == 'Y' or 'SEC-Y') exists.
   bool get _hasYSection => _orderedSections.any((s) {
-    final c = s['code'] as String;
-    return c == 'Y';
+    final c = (s['code'] as String? ?? '').toUpperCase();
+    return c == 'Y' || c == 'SEC-Y' || c.startsWith('Y-');
   });
 
   /// The display_order of Section Y, or -1 if not found.
   int get _ySectionDisplayOrder {
     for (final s in _orderedSections) {
-      final c = s['code'] as String;
-      if (c == 'Y') return (s['displayOrder'] as int? ?? -1);
+      final c = (s['code'] as String? ?? '').toUpperCase();
+      if (c == 'Y' || c == 'SEC-Y' || c.startsWith('Y-')) return (s['displayOrder'] as int? ?? -1);
     }
     return -1;
   }
@@ -1318,17 +1352,17 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
   // ── Section Z (Enumerator Observation) helpers ────────────────────────────
 
-  /// Returns true when Section Z (section_code == 'Z') exists.
+  /// Returns true when Section Z (section_code == 'Z' or 'SEC-Z') exists.
   bool get _hasZSection => _orderedSections.any((s) {
-    final c = s['code'] as String;
-    return c == 'Z';
+    final c = (s['code'] as String? ?? '').toUpperCase();
+    return c == 'Z' || c == 'SEC-Z' || c.startsWith('Z-');
   });
 
   /// The display_order of Section Z, or -1 if not found.
   int get _zSectionDisplayOrder {
     for (final s in _orderedSections) {
-      final c = s['code'] as String;
-      if (c == 'Z') return (s['displayOrder'] as int? ?? -1);
+      final c = (s['code'] as String? ?? '').toUpperCase();
+      if (c == 'Z' || c == 'SEC-Z' || c.startsWith('Z-')) return (s['displayOrder'] as int? ?? -1);
     }
     return -1;
   }
@@ -1573,8 +1607,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
   /// The display_order of Section D, or -1 if not found.
   int get _dSectionDisplayOrder {
     for (final s in _orderedSections) {
-      final c = s['code'] as String;
-      if (c == 'D' || c == 'SEC-D') return (s['displayOrder'] as int? ?? -1);
+      final c = (s['code'] as String? ?? '').toUpperCase();
+      if (c == 'D' || c == 'SEC-D' || c.startsWith('D-')) return (s['displayOrder'] as int? ?? -1);
     }
     return -1;
   }
@@ -2913,6 +2947,102 @@ class _SurveyScreenState extends State<SurveyScreen> {
       return;
     }
 
+    // ── Section E mode: advance to section after E ───────────────────────
+    if (_isPestSectionMode) {
+      if (_hasFSection) {
+        final fId = _fSectionId;
+        final fIdx = fId != null ? _questions.indexWhere((q) => q.sectionId == fId) : -1;
+        setState(() {
+          _isPestSectionMode = false;
+          _isFSectionMode = true;
+          if (fIdx >= 0) {
+            _currentQuestionIndex = fIdx;
+          } else {
+            final pestOrder = _pestSectionDisplayOrder;
+            for (int i = 0; i < _questions.length; i++) {
+              final secOrder = (_orderedSections.firstWhere(
+                (s) => s['id'] == _questions[i].sectionId,
+                orElse: () => {'displayOrder': -1},
+              )['displayOrder'] as int?) ?? -1;
+              if (secOrder > pestOrder) {
+                _currentQuestionIndex = i;
+                break;
+              }
+            }
+          }
+        });
+        return;
+      }
+      final pestOrder = _pestSectionDisplayOrder;
+      int nextVisibleAfterPest = -1;
+      for (int i = 0; i < _questions.length; i++) {
+        final q = _questions[i];
+        final secOrder = (_orderedSections.firstWhere(
+          (s) => s['id'] == q.sectionId,
+          orElse: () => {'displayOrder': -1},
+        )['displayOrder'] as int?) ?? -1;
+        if (secOrder > pestOrder && _isQuestionVisible(q)) {
+          nextVisibleAfterPest = i;
+          break;
+        }
+      }
+      if (nextVisibleAfterPest >= 0) {
+        setState(() {
+          _isPestSectionMode = false;
+          _currentQuestionIndex = nextVisibleAfterPest;
+        });
+        return;
+      }
+      if (_hasLSection) {
+        setState(() {
+          _isPestSectionMode = false;
+          _isLSectionMode = true;
+        });
+        return;
+      }
+      setState(() {
+        _isPestSectionMode = false;
+        _isReviewMode = true;
+      });
+      return;
+    }
+
+    // ── Section F mode: advance to section after F ──────────────────────
+    if (_isFSectionMode) {
+      final fOrder = _fSectionDisplayOrder;
+      int nextVisibleAfterF = -1;
+      for (int i = 0; i < _questions.length; i++) {
+        final q = _questions[i];
+        final secOrder = (_orderedSections.firstWhere(
+          (s) => s['id'] == q.sectionId,
+          orElse: () => {'displayOrder': -1},
+        )['displayOrder'] as int?) ?? -1;
+        if (secOrder > fOrder && _isQuestionVisible(q)) {
+          nextVisibleAfterF = i;
+          break;
+        }
+      }
+      if (nextVisibleAfterF >= 0) {
+        setState(() {
+          _isFSectionMode = false;
+          _currentQuestionIndex = nextVisibleAfterF;
+        });
+        return;
+      }
+      if (_hasLSection) {
+        setState(() {
+          _isFSectionMode = false;
+          _isLSectionMode = true;
+        });
+        return;
+      }
+      setState(() {
+        _isFSectionMode = false;
+        _isReviewMode = true;
+      });
+      return;
+    }
+
     // ── Section D (Agricultural Information / Cropping System) mode ───────
     if (_isDSectionMode) {
       final state = _agriculturalInfoKey.currentState;
@@ -2928,6 +3058,52 @@ class _SurveyScreenState extends State<SurveyScreen> {
         state.saveData();
       }
       _dSectionPageIndex = 0;
+      if (_hasPestSection) {
+        final pestId = _pestSectionId;
+        final pestIdx = pestId != null ? _questions.indexWhere((q) => q.sectionId == pestId) : -1;
+        setState(() {
+          _isPestSectionMode = true;
+          if (pestIdx >= 0) {
+            _currentQuestionIndex = pestIdx;
+          } else {
+            final dOrder = _dSectionDisplayOrder;
+            for (int i = 0; i < _questions.length; i++) {
+              final secOrder = (_orderedSections.firstWhere(
+                (s) => s['id'] == _questions[i].sectionId,
+                orElse: () => {'displayOrder': -1},
+              )['displayOrder'] as int?) ?? -1;
+              if (secOrder > dOrder) {
+                _currentQuestionIndex = i;
+                break;
+              }
+            }
+          }
+        });
+        return;
+      }
+      if (_hasFSection) {
+        final fId = _fSectionId;
+        final fIdx = fId != null ? _questions.indexWhere((q) => q.sectionId == fId) : -1;
+        setState(() {
+          _isFSectionMode = true;
+          if (fIdx >= 0) {
+            _currentQuestionIndex = fIdx;
+          } else {
+            final dOrder = _dSectionDisplayOrder;
+            for (int i = 0; i < _questions.length; i++) {
+              final secOrder = (_orderedSections.firstWhere(
+                (s) => s['id'] == _questions[i].sectionId,
+                orElse: () => {'displayOrder': -1},
+              )['displayOrder'] as int?) ?? -1;
+              if (secOrder > dOrder) {
+                _currentQuestionIndex = i;
+                break;
+              }
+            }
+          }
+        });
+        return;
+      }
       final afterDId = _sectionAfterD;
       if (afterDId != null) {
         final firstIdx = _questions.indexWhere((q) => q.sectionId == afterDId);
@@ -2938,11 +3114,23 @@ class _SurveyScreenState extends State<SurveyScreen> {
           return;
         }
       }
-      final nextIdx = _questions.indexWhere(
-          (q) => q.sectionId != _dSectionId && q.sectionId != _cSectionId && q.sectionId != _bSectionId && q.sectionId != _aSectionId);
-      if (nextIdx >= 0) {
+      // Strictly search forward: questions belonging to sections with display_order > dOrder
+      final dOrder = _dSectionDisplayOrder;
+      int nextVisibleAfterD = -1;
+      for (int i = 0; i < _questions.length; i++) {
+        final q = _questions[i];
+        final secOrder = (_orderedSections.firstWhere(
+          (s) => s['id'] == q.sectionId,
+          orElse: () => {'displayOrder': -1},
+        )['displayOrder'] as int?) ?? -1;
+        if (secOrder > dOrder && _isQuestionVisible(q)) {
+          nextVisibleAfterD = i;
+          break;
+        }
+      }
+      if (nextVisibleAfterD >= 0) {
         setState(() {
-          _currentQuestionIndex = nextIdx;
+          _currentQuestionIndex = nextVisibleAfterD;
         });
         return;
       }
@@ -3169,46 +3357,47 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
     // ── Section T mode: advance to section after T (or review) ───────────
     if (_isTSectionMode) {
-      final afterTId = _sectionAfterT;
-      if (afterTId != null) {
-        // Find the next section's code to dispatch to the right specialized mode
-        final nextSection = _orderedSections.firstWhere(
-          (s) => s['id'] == afterTId,
-          orElse: () => <String, dynamic>{},
-        );
-        final nextCode = nextSection['code'] as String? ?? '';
-        if (nextCode == 'X') {
-          setState(() {
-            _isTSectionMode = false;
-            _isXSectionMode = true;
-          });
-          return;
-        }
-        if (nextCode == 'Y') {
-          setState(() {
-            _isTSectionMode = false;
-            _isYSectionMode = true;
-          });
-          return;
-        }
-        if (nextCode == 'Z') {
-          setState(() {
-            _isTSectionMode = false;
-            _isZSectionMode = true;
-          });
-          return;
-        }
-        // Normal section with questions
-        final firstIdx = _questions.indexWhere((q) => q.sectionId == afterTId);
-        if (firstIdx >= 0) {
-          setState(() {
-            _isTSectionMode = false;
-            _currentQuestionIndex = firstIdx;
-          });
-          return;
+      final tOrder = _tSectionDisplayOrder;
+      if (_hasXSection && _xSectionDisplayOrder > tOrder) {
+        setState(() {
+          _isTSectionMode = false;
+          _isXSectionMode = true;
+        });
+        return;
+      }
+      if (_hasYSection && _ySectionDisplayOrder > tOrder) {
+        setState(() {
+          _isTSectionMode = false;
+          _isYSectionMode = true;
+        });
+        return;
+      }
+      if (_hasZSection && _zSectionDisplayOrder > tOrder) {
+        setState(() {
+          _isTSectionMode = false;
+          _isZSectionMode = true;
+        });
+        return;
+      }
+      int nextVisibleAfterT = -1;
+      for (int i = 0; i < _questions.length; i++) {
+        final q = _questions[i];
+        final secOrder = (_orderedSections.firstWhere(
+          (s) => s['id'] == q.sectionId,
+          orElse: () => {'displayOrder': -1},
+        )['displayOrder'] as int?) ?? -1;
+        if (secOrder > tOrder && _isQuestionVisible(q)) {
+          nextVisibleAfterT = i;
+          break;
         }
       }
-      // No section after T (or no questions found) — go to review
+      if (nextVisibleAfterT >= 0) {
+        setState(() {
+          _isTSectionMode = false;
+          _currentQuestionIndex = nextVisibleAfterT;
+        });
+        return;
+      }
       setState(() {
         _isTSectionMode = false;
         _isReviewMode = true;
@@ -3219,7 +3408,6 @@ class _SurveyScreenState extends State<SurveyScreen> {
     // ── Section X mode: advance to section after X (or review) ───────────
     if (_isXSectionMode) {
       final xOrder = _xSectionDisplayOrder;
-      // Check Y → Z in display_order sequence
       if (_hasYSection && _ySectionDisplayOrder > xOrder) {
         setState(() {
           _isXSectionMode = false;
@@ -3234,17 +3422,24 @@ class _SurveyScreenState extends State<SurveyScreen> {
         });
         return;
       }
-      // No Y/Z after X — check for normal questions after X
-      final afterXId = _sectionAfterX;
-      if (afterXId != null) {
-        final firstIdx = _questions.indexWhere((q) => q.sectionId == afterXId);
-        if (firstIdx >= 0) {
-          setState(() {
-            _isXSectionMode = false;
-            _currentQuestionIndex = firstIdx;
-          });
-          return;
+      int nextVisibleAfterX = -1;
+      for (int i = 0; i < _questions.length; i++) {
+        final q = _questions[i];
+        final secOrder = (_orderedSections.firstWhere(
+          (s) => s['id'] == q.sectionId,
+          orElse: () => {'displayOrder': -1},
+        )['displayOrder'] as int?) ?? -1;
+        if (secOrder > xOrder && _isQuestionVisible(q)) {
+          nextVisibleAfterX = i;
+          break;
         }
+      }
+      if (nextVisibleAfterX >= 0) {
+        setState(() {
+          _isXSectionMode = false;
+          _currentQuestionIndex = nextVisibleAfterX;
+        });
+        return;
       }
       setState(() {
         _isXSectionMode = false;
@@ -3256,7 +3451,6 @@ class _SurveyScreenState extends State<SurveyScreen> {
     // ── Section Y mode: advance to section after Y (or review) ───────────
     if (_isYSectionMode) {
       final yOrder = _ySectionDisplayOrder;
-      // Check Z in display_order sequence
       if (_hasZSection && _zSectionDisplayOrder > yOrder) {
         setState(() {
           _isYSectionMode = false;
@@ -3264,17 +3458,24 @@ class _SurveyScreenState extends State<SurveyScreen> {
         });
         return;
       }
-      // No Z after Y — check for normal questions after Y
-      final afterYId = _sectionAfterY;
-      if (afterYId != null) {
-        final firstIdx = _questions.indexWhere((q) => q.sectionId == afterYId);
-        if (firstIdx >= 0) {
-          setState(() {
-            _isYSectionMode = false;
-            _currentQuestionIndex = firstIdx;
-          });
-          return;
+      int nextVisibleAfterY = -1;
+      for (int i = 0; i < _questions.length; i++) {
+        final q = _questions[i];
+        final secOrder = (_orderedSections.firstWhere(
+          (s) => s['id'] == q.sectionId,
+          orElse: () => {'displayOrder': -1},
+        )['displayOrder'] as int?) ?? -1;
+        if (secOrder > yOrder && _isQuestionVisible(q)) {
+          nextVisibleAfterY = i;
+          break;
         }
+      }
+      if (nextVisibleAfterY >= 0) {
+        setState(() {
+          _isYSectionMode = false;
+          _currentQuestionIndex = nextVisibleAfterY;
+        });
+        return;
       }
       setState(() {
         _isYSectionMode = false;
@@ -3283,19 +3484,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
       return;
     }
 
-    // ── Section Z mode: advance to section after Z (or review) ───────────
+    // ── Section Z mode: advance to review ────────────────────────────────
     if (_isZSectionMode) {
-      final afterZId = _sectionAfterZ;
-      if (afterZId != null) {
-        final firstIdx = _questions.indexWhere((q) => q.sectionId == afterZId);
-        if (firstIdx >= 0) {
-          setState(() {
-            _isZSectionMode = false;
-            _currentQuestionIndex = firstIdx;
-          });
-          return;
-        }
-      }
       setState(() {
         _isZSectionMode = false;
         _isReviewMode = true;
@@ -3317,7 +3507,6 @@ class _SurveyScreenState extends State<SurveyScreen> {
     if (_isKSectionMode) {
       final afterKId = _sectionAfterK;
       if (afterKId != null) {
-        // Check if the section after K is Section L (which has no normal questions)
         if (afterKId == _lSectionId && _hasLSection) {
           setState(() {
             _isKSectionMode = false;
@@ -3334,92 +3523,39 @@ class _SurveyScreenState extends State<SurveyScreen> {
           return;
         }
       }
-      // No section after K — go to review or next special section
-      if (_hasPestSection) {
-        setState(() {
-          _isKSectionMode = false;
-          _isPestSectionMode = true;
-        });
-        return;
-      }
-      if (_hasFSection) {
-        setState(() {
-          _isKSectionMode = false;
-          _isFSectionMode = true;
-        });
-        return;
-      }
       if (_hasLSection) {
+        final kOrder = _kSectionDisplayOrder;
+        final lOrder = _lSectionDisplayOrder;
+        if (lOrder > kOrder) {
+          setState(() {
+            _isKSectionMode = false;
+            _isLSectionMode = true;
+          });
+          return;
+        }
+      }
+      final kOrder = _kSectionDisplayOrder;
+      int nextVisibleAfterK = -1;
+      for (int i = 0; i < _questions.length; i++) {
+        final q = _questions[i];
+        final secOrder = (_orderedSections.firstWhere(
+          (s) => s['id'] == q.sectionId,
+          orElse: () => {'displayOrder': -1},
+        )['displayOrder'] as int?) ?? -1;
+        if (secOrder > kOrder && _isQuestionVisible(q)) {
+          nextVisibleAfterK = i;
+          break;
+        }
+      }
+      if (nextVisibleAfterK >= 0) {
         setState(() {
           _isKSectionMode = false;
-          _isLSectionMode = true;
+          _currentQuestionIndex = nextVisibleAfterK;
         });
         return;
       }
       setState(() {
         _isKSectionMode = false;
-        _isReviewMode = true;
-      });
-      return;
-    }
-
-    // ── Section F mode: advance to section after F ──────────────────────
-    if (_isFSectionMode) {
-      final afterId = _sectionAfterF;
-      if (afterId != null) {
-        final firstIdx = _questions.indexWhere((q) => q.sectionId == afterId);
-        if (firstIdx >= 0) {
-          setState(() {
-            _isFSectionMode = false;
-            _currentQuestionIndex = firstIdx;
-          });
-          return;
-        }
-      }
-      if (_hasLSection) {
-        setState(() {
-          _isFSectionMode = false;
-          _isLSectionMode = true;
-        });
-        return;
-      }
-      setState(() {
-        _isFSectionMode = false;
-        _isReviewMode = true;
-      });
-      return;
-    }
-
-    // ── Section E mode: advance to section after E ───────────────────────
-    if (_isPestSectionMode) {
-      final afterId = _sectionAfterPest;
-      if (afterId != null) {
-        final firstIdx = _questions.indexWhere((q) => q.sectionId == afterId);
-        if (firstIdx >= 0) {
-          setState(() {
-            _isPestSectionMode = false;
-            _currentQuestionIndex = firstIdx;
-          });
-          return;
-        }
-      }
-      // No section after E — check if F section should appear next
-      if (_hasFSection) {
-        setState(() {
-          _isPestSectionMode = false;
-          _isFSectionMode = true;
-        });
-        return;
-      }
-      if (_hasLSection) {
-        setState(() {
-          _isPestSectionMode = false;
-          _isLSectionMode = true;
-        });
-        return;
-      }
-      setState(() {
-        _isPestSectionMode = false;
         _isReviewMode = true;
       });
       return;
@@ -3517,8 +3653,8 @@ class _SurveyScreenState extends State<SurveyScreen> {
           return;
         }
       }
-      // Check Section D (Cropping Pattern Q9) boundary: after last D question → show Q9
-      if (_hasCroppingPatternSection && !_isCroppingPatternMode) {
+      // Check Section D (Cropping Pattern Q9) boundary: after last D question → show Q9 (only if Section D unified widget is not active)
+      if (!_hasDSection && _hasCroppingPatternSection && !_isCroppingPatternMode) {
         final dSecId = _dSectionId;
         final currentSecId = _questions[_currentQuestionIndex].sectionId;
         final nextSecId = _questions[next].sectionId;
@@ -3643,171 +3779,64 @@ class _SurveyScreenState extends State<SurveyScreen> {
       }
       setState(() => _currentQuestionIndex = next);
     } else {
-      // No more questions
-      if (_hasAssetMatrixSection && !_isAssetMatrixMode) {
-        final cSec = _orderedSections.firstWhere((s) {
-          final c = s['code'] as String;
-          return c == 'C' || c == 'SEC-C';
-        }, orElse: () => <String, dynamic>{});
-        final cSecId = cSec['id'] as String?;
-        final currentSecId = _questions[_currentQuestionIndex].sectionId;
-        if (cSecId != null && currentSecId == cSecId) {
-          setState(() => _isAssetMatrixMode = true);
-          return;
-        }
-      }
-      if (_hasCroppingPatternSection && !_isCroppingPatternMode) {
-        final dSecId = _dSectionId;
-        final currentSecId = _questions[_currentQuestionIndex].sectionId;
-        if (dSecId != null && currentSecId == dSecId) {
-          setState(() => _isCroppingPatternMode = true);
-          return;
-        }
-      }
-      if (_hasLSection && !_isLSectionMode) {
-        final lId = _lSectionId;
-        final currentSecId = _questions[_currentQuestionIndex].sectionId;
-        if (lId != null && currentSecId == lId) {
-          setState(() => _isLSectionMode = true);
-          return;
-        }
-      }
-      if (_hasKSection && !_isKSectionMode) {
-        final kId = _kSectionId;
-        final currentSecId = _questions[_currentQuestionIndex].sectionId;
-        if (kId != null && currentSecId == kId) {
-          // We're on the last K question — enter K mode (shouldn't normally happen)
-          setState(() => _isKSectionMode = true);
-          return;
-        }
-      }
-      if (_hasPestSection && !_isPestSectionMode) {
-        final beforeId = _sectionBeforePest;
-        final currentSecId = _questions[_currentQuestionIndex].sectionId;
-        if (beforeId == null || currentSecId == beforeId) {
-          setState(() => _isPestSectionMode = true);
-          return;
-        }
-      }
-      if (_hasFSection && !_isFSectionMode) {
-        final beforeFId = _sectionBeforeF;
-        final currentSecId = _questions[_currentQuestionIndex].sectionId;
-        if (beforeFId == null || currentSecId == beforeFId) {
-          setState(() => _isFSectionMode = true);
-          return;
-        }
-      }
-      if (_hasLSection && !_isLSectionMode) {
-        // Only enter L mode if the current section is BEFORE Section L
-        // in display order. If we are already past L (e.g. in Section Q),
-        // skip the L fallback and proceed directly to Preview Survey.
-        final lOrder = _lSectionDisplayOrder;
-        final currentSecId = _questions[_currentQuestionIndex].sectionId;
-        final currentSecOrder =
-            (_orderedSections.firstWhere(
-                  (s) => s['id'] == currentSecId,
-                  orElse: () => {'displayOrder': -1},
-                )['displayOrder']
-                as int?) ??
-            -1;
-        if (lOrder >= 0 && currentSecOrder < lOrder) {
-          setState(() => _isLSectionMode = true);
-          return;
-        }
-      }
-      // Fallback: check registered specialized screens — if the current question
-      // is the trigger for any registered screen, activate it before going to review.
+      // No more questions in _questions
+      // 1. Check if current question triggers any registered specialized screen (O, P, etc.)
       for (final entry in _specializedScreenRegistry) {
         if (_questions[_currentQuestionIndex].id == entry.triggerQuestionId) {
           entry.activate();
           return;
         }
       }
-      // Fallback: if Section R exists and the current section is the section
-      // immediately before R (by display_order), enter R mode.
-      if (_hasRSection && !_isRSectionMode) {
-        final beforeRId = _sectionBeforeR;
-        final currentSecId = _questions[_currentQuestionIndex].sectionId;
-        if (beforeRId != null && currentSecId == beforeRId) {
-          setState(() => _isRSectionMode = true);
-          return;
-        }
-        // Also: if R is the very first section and there are no questions before it
-        if (beforeRId == null) {
-          setState(() => _isRSectionMode = true);
-          return;
-        }
+
+      final currentSecId = _questions[_currentQuestionIndex].sectionId;
+      final currentSecOrder = (_orderedSections.firstWhere(
+            (s) => s['id'] == currentSecId,
+            orElse: () => {'displayOrder': -1},
+          )['displayOrder'] as int?) ?? -1;
+
+      // 2. Advance to the next specialized screen that comes strictly after currentSecOrder
+      if (_hasPestSection && _pestSectionDisplayOrder > currentSecOrder && !_isPestSectionMode) {
+        setState(() => _isPestSectionMode = true);
+        return;
       }
-      // Fallback: if Section S exists and the current section is the section
-      // immediately before S (by display_order), enter S mode.
-      if (_hasSSSection && !_isSSectionMode) {
-        final beforeSId = _sectionBeforeS;
-        final currentSecId = _questions[_currentQuestionIndex].sectionId;
-        if (beforeSId != null && currentSecId == beforeSId) {
-          setState(() => _isSSectionMode = true);
-          return;
-        }
-        if (beforeSId == null) {
-          setState(() => _isSSectionMode = true);
-          return;
-        }
+      if (_hasFSection && _fSectionDisplayOrder > currentSecOrder && !_isFSectionMode) {
+        setState(() => _isFSectionMode = true);
+        return;
       }
-      // Fallback: if Section T exists and the current section is the section
-      // immediately before T (by display_order), enter T mode.
-      if (_hasTSection && !_isTSectionMode) {
-        final beforeTId = _sectionBeforeT;
-        final currentSecId = _questions[_currentQuestionIndex].sectionId;
-        if (beforeTId != null && currentSecId == beforeTId) {
-          setState(() => _isTSectionMode = true);
-          return;
-        }
-        if (beforeTId == null) {
-          setState(() => _isTSectionMode = true);
-          return;
-        }
+      if (_hasKSection && _kSectionDisplayOrder > currentSecOrder && !_isKSectionMode) {
+        setState(() => _isKSectionMode = true);
+        return;
       }
-      // Fallback: if Section X exists and the current section is the section
-      // immediately before X (by display_order), enter X mode.
-      if (_hasXSection && !_isXSectionMode) {
-        final beforeXId = _sectionBeforeX;
-        final currentSecId = _questions[_currentQuestionIndex].sectionId;
-        if (beforeXId != null && currentSecId == beforeXId) {
-          setState(() => _isXSectionMode = true);
-          return;
-        }
-        if (beforeXId == null) {
-          setState(() => _isXSectionMode = true);
-          return;
-        }
+      if (_hasLSection && _lSectionDisplayOrder > currentSecOrder && !_isLSectionMode) {
+        setState(() => _isLSectionMode = true);
+        return;
       }
-      // Fallback: if Section Y exists and the current section is the section
-      // immediately before Y (by display_order), enter Y mode.
-      if (_hasYSection && !_isYSectionMode) {
-        final beforeYId = _sectionBeforeY;
-        final currentSecId = _questions[_currentQuestionIndex].sectionId;
-        if (beforeYId != null && currentSecId == beforeYId) {
-          setState(() => _isYSectionMode = true);
-          return;
-        }
-        if (beforeYId == null) {
-          setState(() => _isYSectionMode = true);
-          return;
-        }
+      if (_hasRSection && _rSectionDisplayOrder > currentSecOrder && !_isRSectionMode) {
+        setState(() => _isRSectionMode = true);
+        return;
       }
-      // Fallback: if Section Z exists and the current section is the section
-      // immediately before Z (by display_order), enter Z mode.
-      if (_hasZSection && !_isZSectionMode) {
-        final beforeZId = _sectionBeforeZ;
-        final currentSecId = _questions[_currentQuestionIndex].sectionId;
-        if (beforeZId != null && currentSecId == beforeZId) {
-          setState(() => _isZSectionMode = true);
-          return;
-        }
-        if (beforeZId == null) {
-          setState(() => _isZSectionMode = true);
-          return;
-        }
+      if (_hasSSSection && _sSectionDisplayOrder > currentSecOrder && !_isSSectionMode) {
+        setState(() => _isSSectionMode = true);
+        return;
       }
+      if (_hasTSection && _tSectionDisplayOrder > currentSecOrder && !_isTSectionMode) {
+        setState(() => _isTSectionMode = true);
+        return;
+      }
+      if (_hasXSection && _xSectionDisplayOrder > currentSecOrder && !_isXSectionMode) {
+        setState(() => _isXSectionMode = true);
+        return;
+      }
+      if (_hasYSection && _ySectionDisplayOrder > currentSecOrder && !_isYSectionMode) {
+        setState(() => _isYSectionMode = true);
+        return;
+      }
+      if (_hasZSection && _zSectionDisplayOrder > currentSecOrder && !_isZSectionMode) {
+        setState(() => _isZSectionMode = true);
+        return;
+      }
+
+      // 3. All questions and specialized sections complete — proceed to Review
       setState(() => _isReviewMode = true);
     }
   }
@@ -4627,6 +4656,16 @@ class _SurveyScreenState extends State<SurveyScreen> {
 
     // ── In E section mode: go back to section before E ──────────────────
     if (_isPestSectionMode) {
+      if (_hasDSection) {
+        final dId = _dSectionId;
+        final dIdx = dId != null ? _questions.indexWhere((q) => q.sectionId == dId) : -1;
+        setState(() {
+          _isPestSectionMode = false;
+          _dSectionPageIndex = 1;
+          if (dIdx >= 0) _currentQuestionIndex = dIdx;
+        });
+        return;
+      }
       final beforeId = _sectionBeforePest;
       if (beforeId != null) {
         int lastIdx = -1;
@@ -4793,31 +4832,54 @@ class _SurveyScreenState extends State<SurveyScreen> {
       }
     }
 
-    // ── At first question of section after F: go back into F mode ──────────
+    // ── At first question of section after F: go back into F mode (or Pest mode) ──
     if (_hasFSection) {
-      final afterFId = _sectionAfterF;
-      if (afterFId != null) {
-        final currentSecId = _questions[_currentQuestionIndex].sectionId;
-        if (currentSecId == afterFId) {
-          final firstVisibleInAfterF = _questions.indexWhere(
-            (q) => q.sectionId == afterFId && _isQuestionVisible(q),
-          );
-          if (firstVisibleInAfterF == _currentQuestionIndex) {
-            setState(() => _isFSectionMode = true);
-            return;
+      final fOrder = _fSectionDisplayOrder;
+      final currentSecId = _questions[_currentQuestionIndex].sectionId;
+      final currentSecOrder = (_orderedSections.firstWhere(
+        (s) => s['id'] == currentSecId,
+        orElse: () => {'displayOrder': -1},
+      )['displayOrder'] as int?) ?? -1;
+
+      if (currentSecOrder > fOrder && fOrder >= 0) {
+        int firstVisibleAfterF = -1;
+        for (int i = 0; i < _questions.length; i++) {
+          final secOrder = (_orderedSections.firstWhere(
+            (s) => s['id'] == _questions[i].sectionId,
+            orElse: () => {'displayOrder': -1},
+          )['displayOrder'] as int?) ?? -1;
+          if (secOrder > fOrder && _isQuestionVisible(_questions[i])) {
+            firstVisibleAfterF = i;
+            break;
           }
         }
-      }
-      // Also handle: at first question of section after E, but F exists between
-      final fSec = _orderedSections.firstWhere((s) {
-        final c = s['code'] as String;
-        return c == 'F' || c == 'SEC-F';
-      }, orElse: () => <String, dynamic>{});
-      final fSecId = fSec['id'] as String?;
-      if (fSecId != null) {
-        final currentSecId = _questions[_currentQuestionIndex].sectionId;
-        if (currentSecId == fSecId) {
+        if (firstVisibleAfterF == _currentQuestionIndex) {
           setState(() => _isFSectionMode = true);
+          return;
+        }
+      }
+    } else if (_hasPestSection) {
+      final pestOrder = _pestSectionDisplayOrder;
+      final currentSecId = _questions[_currentQuestionIndex].sectionId;
+      final currentSecOrder = (_orderedSections.firstWhere(
+        (s) => s['id'] == currentSecId,
+        orElse: () => {'displayOrder': -1},
+      )['displayOrder'] as int?) ?? -1;
+
+      if (currentSecOrder > pestOrder && pestOrder >= 0) {
+        int firstVisibleAfterPest = -1;
+        for (int i = 0; i < _questions.length; i++) {
+          final secOrder = (_orderedSections.firstWhere(
+            (s) => s['id'] == _questions[i].sectionId,
+            orElse: () => {'displayOrder': -1},
+          )['displayOrder'] as int?) ?? -1;
+          if (secOrder > pestOrder && _isQuestionVisible(_questions[i])) {
+            firstVisibleAfterPest = i;
+            break;
+          }
+        }
+        if (firstVisibleAfterPest == _currentQuestionIndex) {
+          setState(() => _isPestSectionMode = true);
           return;
         }
       }
@@ -4869,6 +4931,32 @@ class _SurveyScreenState extends State<SurveyScreen> {
             (q) => q.sectionId == afterDId && _isQuestionVisible(q),
           );
           if (firstVisibleInAfterD == _currentQuestionIndex) {
+            // If Section F is active between D and afterD, go back into F mode
+            if (_hasFSection) {
+              final fOrder = _fSectionDisplayOrder;
+              final dOrder = _dSectionDisplayOrder;
+              final currentSecOrder = (_orderedSections.firstWhere(
+                (s) => s['id'] == currentSecId,
+                orElse: () => {'displayOrder': -1},
+              )['displayOrder'] as int?) ?? -1;
+              if (fOrder > dOrder && fOrder < currentSecOrder) {
+                setState(() => _isFSectionMode = true);
+                return;
+              }
+            }
+            // If Section E (Pest) is active between D and afterD, go back into Pest mode
+            if (_hasPestSection) {
+              final pestOrder = _pestSectionDisplayOrder;
+              final dOrder = _dSectionDisplayOrder;
+              final currentSecOrder = (_orderedSections.firstWhere(
+                (s) => s['id'] == currentSecId,
+                orElse: () => {'displayOrder': -1},
+              )['displayOrder'] as int?) ?? -1;
+              if (pestOrder > dOrder && pestOrder < currentSecOrder) {
+                setState(() => _isPestSectionMode = true);
+                return;
+              }
+            }
             final dId = _dSectionId;
             final dIdx = dId != null ? _questions.indexWhere((q) => q.sectionId == dId) : -1;
             setState(() {
@@ -6457,16 +6545,12 @@ class _SurveyScreenState extends State<SurveyScreen> {
                     }
                     return null;
                   }
-                  // In Z section mode, show Review only if no section after Z
+                  // In Z section mode, show Review
                   if (_isZSectionMode) {
-                    final afterZId = _sectionAfterZ;
-                    if (afterZId == null) {
-                      return () => setState(() {
-                        _isZSectionMode = false;
-                        _isReviewMode = true;
-                      });
-                    }
-                    return null;
+                    return () => setState(() {
+                      _isZSectionMode = false;
+                      _isReviewMode = true;
+                    });
                   }
                   // In K section mode, show Review only if no section after K and no E/F/L
                   if (_isKSectionMode) {
@@ -6511,18 +6595,25 @@ class _SurveyScreenState extends State<SurveyScreen> {
                   }
                   final isLastVisible = next >= _questions.length;
                   if (!isLastVisible) return null;
-                  if (_hasPestSection) return null;
-                  if (_hasFSection) return null;
-                  if (_hasLSection) return null;
-                  if (_hasKSection) {
-                    // If K is the last section, we'll enter K mode on next, not review
-                    final kId = _kSectionId;
-                    if (kId != null) {
-                      final currentSecId =
-                          _questions[_currentQuestionIndex].sectionId;
-                      if (currentSecId != kId) return null;
-                    }
-                  }
+
+                  final currentSecId = _questions[_currentQuestionIndex].sectionId;
+                  final currentSecOrder = (_orderedSections.firstWhere(
+                    (s) => s['id'] == currentSecId,
+                    orElse: () => {'displayOrder': -1},
+                  )['displayOrder'] as int?) ?? -1;
+
+                  // If any specialized screen is pending strictly after current section, don't show review yet
+                  if (_hasPestSection && _pestSectionDisplayOrder > currentSecOrder) return null;
+                  if (_hasFSection && _fSectionDisplayOrder > currentSecOrder) return null;
+                  if (_hasKSection && _kSectionDisplayOrder > currentSecOrder) return null;
+                  if (_hasLSection && _lSectionDisplayOrder > currentSecOrder) return null;
+                  if (_hasRSection && _rSectionDisplayOrder > currentSecOrder) return null;
+                  if (_hasSSSection && _sSectionDisplayOrder > currentSecOrder) return null;
+                  if (_hasTSection && _tSectionDisplayOrder > currentSecOrder) return null;
+                  if (_hasXSection && _xSectionDisplayOrder > currentSecOrder) return null;
+                  if (_hasYSection && _ySectionDisplayOrder > currentSecOrder) return null;
+                  if (_hasZSection && _zSectionDisplayOrder > currentSecOrder) return null;
+
                   return () => setState(() => _isReviewMode = true);
                 }(),
                 onSubmit: _isReviewMode ? _submitSurvey : null,

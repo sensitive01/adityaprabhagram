@@ -1644,7 +1644,7 @@ class AgriculturalInformationSectionWidgetState
                   );
                 }).toList(),
               ),
-              if (crop.purposes.contains('Other (specify)')) ...[
+              if (crop.purposes.contains('Other ')) ...[
                 const SizedBox(height: 8),
                 TextFormField(
                   initialValue: crop.purposeOther,

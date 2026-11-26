@@ -134,6 +134,9 @@ class LocalDatabaseImpl {
         // Enable foreign key enforcement on every connection.
         await db.execute('PRAGMA foreign_keys = ON');
       },
+      onOpen: (db) async {
+        await _ensureCroppingPatternColumns(db);
+      },
     );
   }
 
@@ -152,6 +155,9 @@ class LocalDatabaseImpl {
       onUpgrade: _onUpgrade,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
+      },
+      onOpen: (db) async {
+        await _ensureCroppingPatternColumns(db);
       },
     );
   }
@@ -177,6 +183,9 @@ class LocalDatabaseImpl {
       onUpgrade: _onUpgrade,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
+      },
+      onOpen: (db) async {
+        await _ensureCroppingPatternColumns(db);
       },
     );
   }
@@ -286,6 +295,10 @@ class LocalDatabaseImpl {
         household_id    TEXT NOT NULL,
         category        TEXT NOT NULL,
         pattern_data_json TEXT NOT NULL DEFAULT '{}',
+        kharif          TEXT,
+        rabi            TEXT,
+        zaid            TEXT,
+        perennial       TEXT,
         created_at      TEXT NOT NULL DEFAULT '$now',
         updated_at      TEXT NOT NULL DEFAULT '$now',
         synced_at       TEXT,
@@ -468,6 +481,10 @@ class LocalDatabaseImpl {
           household_id    TEXT NOT NULL,
           category        TEXT NOT NULL,
           pattern_data_json TEXT NOT NULL DEFAULT '{}',
+          kharif          TEXT,
+          rabi            TEXT,
+          zaid            TEXT,
+          perennial       TEXT,
           created_at      TEXT NOT NULL DEFAULT '$now',
           updated_at      TEXT NOT NULL DEFAULT '$now',
           synced_at       TEXT,
@@ -673,12 +690,47 @@ class LocalDatabaseImpl {
 
   // ── Cropping Pattern ──────────────────────────────────────────────────────
 
+  static Future<void> _ensureCroppingPatternColumns(Database db) async {
+    try {
+      final info = await db.rawQuery('PRAGMA table_info(local_cropping_pattern)');
+      final existingCols = info
+          .map((row) => (row['name'] as String?)?.toLowerCase())
+          .whereType<String>()
+          .toSet();
+      for (final col in ['kharif', 'rabi', 'zaid', 'perennial']) {
+        if (!existingCols.contains(col)) {
+          await db.execute('ALTER TABLE local_cropping_pattern ADD COLUMN $col TEXT');
+        }
+      }
+    } catch (_) {}
+  }
+
   Future<void> upsertCroppingPattern(Map<String, dynamic> record) async {
     final now = DateTime.now().toIso8601String();
-    await _database.insert('local_cropping_pattern', {
-      ...record,
-      'updated_at': now,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    try {
+      await _database.insert('local_cropping_pattern', {
+        ...record,
+        'updated_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    } catch (e) {
+      await _ensureCroppingPatternColumns(_database);
+      try {
+        await _database.insert('local_cropping_pattern', {
+          ...record,
+          'updated_at': now,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      } catch (retryErr) {
+        final fallback = Map<String, dynamic>.from(record);
+        fallback.remove('kharif');
+        fallback.remove('rabi');
+        fallback.remove('zaid');
+        fallback.remove('perennial');
+        await _database.insert('local_cropping_pattern', {
+          ...fallback,
+          'updated_at': now,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    }
   }
 
   Future<List<Map<String, dynamic>>> getCroppingPatterns({
