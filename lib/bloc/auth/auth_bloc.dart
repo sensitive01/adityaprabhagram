@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import '../../services/supabase_service.dart';
@@ -75,6 +76,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final profile = await _supabaseService.fetchCurrentUserProfile();
       emit(AuthAuthenticated(user: user, role: role, profile: profile));
     } on AuthException catch (e) {
+      debugPrint('[AuthBloc] AuthException during sign in: ${e.message} (status: ${e.statusCode})');
       final errorText = e.message.toLowerCase();
       final isNetworkError = errorText.contains('socketexception') ||
           errorText.contains('failed host lookup') ||
@@ -89,7 +91,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         emit(AuthFailure(e.message));
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[AuthBloc] Unexpected error during sign in: $e');
+      debugPrint('[AuthBloc] StackTrace: $stackTrace');
       final errorText = e.toString().toLowerCase();
       final isNetworkError = errorText.contains('socketexception') ||
           errorText.contains('failed host lookup') ||

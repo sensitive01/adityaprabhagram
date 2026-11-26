@@ -17,8 +17,9 @@ void main() async {
   // Initialize Supabase
   try {
     await SupabaseService.initialize();
+    debugPrint('[Supabase] Initialized successfully with URL: ${SupabaseService.supabaseUrl}');
   } catch (e) {
-    debugPrint('Failed to initialize Supabase: $e');
+    debugPrint('[Supabase] Failed to initialize: $e');
   }
 
   // Phase 1: Initialize local SQLite database (additive — does not affect existing Supabase flows).

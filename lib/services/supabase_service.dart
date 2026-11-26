@@ -9,20 +9,22 @@ class SupabaseService {
 
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: '',
+    defaultValue: 'https://adityaprabha.com',
   );
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: '',
+    defaultValue:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE',
   );
 
   static bool _isInitialized = false;
   static bool get isInitialized => _isInitialized;
 
   static Future<void> initialize() async {
+    if (_isInitialized) return;
     if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
       throw Exception(
-        'SUPABASE_URL and SUPABASE_ANON_KEY must be defined using --dart-define.',
+        'SUPABASE_URL and SUPABASE_ANON_KEY must be defined in env.json or --dart-define.',
       );
     }
     await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
