@@ -262,7 +262,7 @@ class _ClusterHeadDashboardScreenState
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 1.6,
+                childAspectRatio: isMobile ? 1.25 : 1.5,
                 children: [
                   _statCard(
                     'Field Agents',
@@ -304,14 +304,16 @@ class _ClusterHeadDashboardScreenState
           const SizedBox(height: 12),
           LayoutBuilder(
             builder: (context, constraints) {
-              final crossCount = constraints.maxWidth > 800 ? 5 : 3;
+              final crossCount = constraints.maxWidth > 800
+                  ? 5
+                  : (constraints.maxWidth > 500 ? 3 : 2);
               return GridView.count(
                 crossAxisCount: crossCount,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 1.6,
+                childAspectRatio: isMobile ? 1.25 : 1.5,
                 children: [
                   _statCard(
                     'Draft',
@@ -368,8 +370,9 @@ class _ClusterHeadDashboardScreenState
   }
 
   Widget _statCard(String label, int value, IconData icon, Color color) {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 12 : 16),
       decoration: BoxDecoration(
         color: AppTheme.surfaceLight,
         borderRadius: BorderRadius.circular(14),
@@ -387,14 +390,17 @@ class _ClusterHeadDashboardScreenState
             ),
             child: Icon(icon, color: color, size: 16),
           ),
+          const SizedBox(height: 6),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 '$value',
                 style: GoogleFonts.manrope(
-                  fontSize: 22,
+                  fontSize: isMobile ? 20 : 22,
                   fontWeight: FontWeight.w800,
+                  color: const Color(0xFF1A1A1A),
                 ),
               ),
               Text(

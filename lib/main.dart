@@ -18,6 +18,8 @@ void main() async {
   try {
     await SupabaseService.initialize();
     debugPrint('[Supabase] Initialized successfully with URL: ${SupabaseService.supabaseUrl}');
+    // Always start fresh on the login screen
+    await SupabaseService.instance.signOut();
   } catch (e) {
     debugPrint('[Supabase] Failed to initialize: $e');
   }
@@ -80,7 +82,7 @@ void main() async {
     MultiBlocProvider(
       providers: [
         BlocProvider<AuthBloc>(
-          create: (context) => AuthBloc()..add(const AuthCheckRequested()),
+          create: (context) => AuthBloc(),
         ),
         BlocProvider<ConnectivityBloc>(
           create: (context) => ConnectivityBloc()..add(const ConnectivitySubscriptionRequested()),

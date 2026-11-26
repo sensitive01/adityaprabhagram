@@ -13,7 +13,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   AuthBloc({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService.instance,
-        super(const AuthInitial()) {
+        super(const AuthUnauthenticated()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthLoginSubmitted>(_onAuthLoginSubmitted);
     on<AuthLogoutRequested>(_onAuthLogoutRequested);

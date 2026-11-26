@@ -300,6 +300,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildStatsGrid(List<_StatCard> cards) {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossCount = constraints.maxWidth > 900
@@ -313,7 +314,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           physics: const NeverScrollableScrollPhysics(),
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: 1.6,
+          childAspectRatio: isMobile ? 1.25 : 1.5,
           children: cards,
         );
       },
@@ -501,8 +502,9 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 12 : 16),
       decoration: BoxDecoration(
         color: AppTheme.surfaceLight,
         borderRadius: BorderRadius.circular(14),
@@ -520,13 +522,15 @@ class _StatCard extends StatelessWidget {
             ),
             child: Icon(icon, color: color, size: 16),
           ),
+          const SizedBox(height: 6),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 '$value',
                 style: GoogleFonts.manrope(
-                  fontSize: 22,
+                  fontSize: isMobile ? 20 : 22,
                   fontWeight: FontWeight.w800,
                   color: const Color(0xFF1A1A1A),
                 ),
