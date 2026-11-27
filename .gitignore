@@ -23,6 +23,7 @@ env*.json
 *.zip
 *.dump
 *.sql
+*.gz
 backups/
 *backup*/
 backup_contents.txt
