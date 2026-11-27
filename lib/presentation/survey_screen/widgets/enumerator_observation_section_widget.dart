@@ -210,7 +210,7 @@ class _EnumeratorObservationSectionWidgetState
           theme: theme,
           rank: 1,
           controller: _rank1Controller,
-          hint: 'Enter first priority need',
+          hint: 'Enter first observation',
         ),
         const SizedBox(height: 16),
 
@@ -219,7 +219,7 @@ class _EnumeratorObservationSectionWidgetState
           theme: theme,
           rank: 2,
           controller: _rank2Controller,
-          hint: 'Enter second priority need',
+          hint: 'Enter second observation',
         ),
         const SizedBox(height: 16),
 
@@ -228,7 +228,7 @@ class _EnumeratorObservationSectionWidgetState
           theme: theme,
           rank: 3,
           controller: _rank3Controller,
-          hint: 'Enter third priority need',
+          hint: 'Enter third observation',
         ),
         const SizedBox(height: 8),
       ],

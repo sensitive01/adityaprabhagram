@@ -1865,6 +1865,66 @@ class _SurveyScreenState extends State<SurveyScreen> {
         if (c == 'L' || c == 'SEC-L') return i + 1;
       }
     }
+    if (_isCSectionMode || _isAssetMatrixMode || _isLivestockSectionMode) {
+      for (int i = 0; i < _orderedSections.length; i++) {
+        final c = (_orderedSections[i]['code'] as String? ?? '').toUpperCase();
+        if (c == 'C' || c == 'SEC-C' || c.startsWith('C-')) return i + 1;
+      }
+    }
+    if (_isDSectionMode || _isCroppingPatternMode) {
+      for (int i = 0; i < _orderedSections.length; i++) {
+        final c = (_orderedSections[i]['code'] as String? ?? '').toUpperCase();
+        if (c == 'D' || c == 'SEC-D' || c.startsWith('D-')) return i + 1;
+      }
+    }
+    if (_isOSectionMode) {
+      for (int i = 0; i < _orderedSections.length; i++) {
+        final c = (_orderedSections[i]['code'] as String? ?? '').toUpperCase();
+        if (c == 'O' || c == 'SEC-O') return i + 1;
+      }
+    }
+    if (_isPSectionMode) {
+      for (int i = 0; i < _orderedSections.length; i++) {
+        final c = (_orderedSections[i]['code'] as String? ?? '').toUpperCase();
+        if (c == 'P' || c == 'SEC-P') return i + 1;
+      }
+    }
+    if (_isRSectionMode) {
+      for (int i = 0; i < _orderedSections.length; i++) {
+        final c = (_orderedSections[i]['code'] as String? ?? '').toUpperCase();
+        if (c == 'R' || c == 'SEC-R') return i + 1;
+      }
+    }
+    if (_isSSectionMode) {
+      for (int i = 0; i < _orderedSections.length; i++) {
+        final c = (_orderedSections[i]['code'] as String? ?? '').toUpperCase();
+        if (c == 'S' || c == 'SEC-S') return i + 1;
+      }
+    }
+    if (_isTSectionMode) {
+      for (int i = 0; i < _orderedSections.length; i++) {
+        final c = (_orderedSections[i]['code'] as String? ?? '').toUpperCase();
+        if (c == 'T' || c == 'SEC-T') return i + 1;
+      }
+    }
+    if (_isXSectionMode) {
+      for (int i = 0; i < _orderedSections.length; i++) {
+        final c = (_orderedSections[i]['code'] as String? ?? '').toUpperCase();
+        if (c == 'X' || c == 'SEC-X') return i + 1;
+      }
+    }
+    if (_isYSectionMode) {
+      for (int i = 0; i < _orderedSections.length; i++) {
+        final c = (_orderedSections[i]['code'] as String? ?? '').toUpperCase();
+        if (c == 'Y' || c == 'SEC-Y') return i + 1;
+      }
+    }
+    if (_isZSectionMode) {
+      for (int i = 0; i < _orderedSections.length; i++) {
+        final c = (_orderedSections[i]['code'] as String? ?? '').toUpperCase();
+        if (c == 'Z' || c == 'SEC-Z') return i + 1;
+      }
+    }
     // B.1 virtual section: find its position relative to DB sections
     if (_currentSectionId == _kB1SectionId) {
       // B.1 appears after Q-BASIC-01's section — find that section's position

@@ -68,7 +68,7 @@ class SurveyProgressHeaderWidget extends StatelessWidget {
                 ),
               ),
               Text(
-                '$answeredCount/$totalQuestions',
+                '${currentQuestionIndex + 1}/$totalQuestions',
                 style: GoogleFonts.manrope(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -109,7 +109,7 @@ class SurveyProgressHeaderWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '$pct% complete',
+                '$pct% complete • $answeredCount answered',
                 style: GoogleFonts.manrope(
                   fontSize: 11,
                   color: theme.colorScheme.onSurfaceVariant,
